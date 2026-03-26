@@ -1,0 +1,105 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    max-width: 1200px;
+    margin: 0 auto;
+    list-style: none;
+    padding: 0;
+}
+
+@media (min-width: 768px) {
+    .product-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 30px 20px;
+    }
+}
+
+
+.card {
+    display: flex;
+    flex-direction: column;
+    height: 100%; 
+    background: $gray-soft;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid $gray-soft;
+    border-radius: 8px;
+    overflow: hidden;    
+
+    @media (hover: hover) {
+        &:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px $gray;
+            
+            img {
+                transform: scale(1.08);
+            }
+        }
+    }
+
+    &:active {
+        transform: scale(0.98); 
+    }
+
+    a {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+
+        .card-img-placeholder {
+            width: 100%;
+            aspect-ratio: 1 / 1; 
+            overflow: hidden;
+            background-color: $white; 
+            padding: 10px; 
+            box-sizing: border-box;
+            border-bottom: 1px solid $gray-soft;
+            display: flex;   
+            align-items: center;
+            justify-content: center;
+
+            img {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain; 
+                transition: transform 0.4s ease;
+            }
+        }
+
+        .card-info {
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1; 
+            justify-content: space-between; 
+            padding: 15px;
+
+            .title {
+                font-size: 16px;
+                font-weight: 600;
+                line-height: 1.4;
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-line-clamp: 1;
+                line-clamp: 1; 
+                -webkit-box-orient: vertical;
+                text-overflow: ellipsis; 
+                height: 1.8em;
+                padding: 6px 0px;
+            }
+
+            .price {
+                font-size: 17px;
+                letter-spacing: 0.5px;
+                color: $primary;
+            }
+        }
+    }
+}

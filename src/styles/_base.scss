@@ -1,0 +1,35 @@
+@use 'variables' as *;
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+// 2. 確保最外層容器撐開
+html, body, #app {
+  min-height: 100vh;
+  width: 100%;
+}
+
+body {
+  font-family: "PingFang TC", "Microsoft JhengHei", "Helvetica Neue", sans-serif;
+  line-height: 1.6;
+  color: $black;
+  background-color: $bg-light; // 淡淡的橘底色，視覺較舒服
+}
+
+h1{
+  text-align: center;
+  padding: 20px;
+}
+
+// 3. 基礎連結樣式
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.container {
+    padding: 30px;
+}

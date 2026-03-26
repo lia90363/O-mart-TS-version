@@ -1,0 +1,133 @@
+[
+  { 
+    "id": 1, 
+    "title": "極簡幾何陶瓷馬克杯", 
+    "price": 450, 
+    "description": "手工打造細膩觸感，讓早晨的咖啡時光更具美感。", 
+    "category": "生活家居", 
+    "variants": [
+      {
+        "name": "A款",
+        "image": "https://i.imgur.com/ixPNRiH.jpg"
+      },
+      {
+        "name": "B款",
+        "image": "https://i.imgur.com/4TYFV99.jpg"
+      }
+    ]    
+  },
+  { 
+    "id": 2, 
+    "title": "植鞣手工短夾", 
+    "price": 1680, 
+    "description": "義大利進口天然皮革，隨時間展現獨特光澤與手感，具環保、親膚、無有害物質的特性。", 
+    "category": "配件飾品", 
+    "image": "https://live.staticflickr.com/65535/53930186143_f8c855c2ea_b.jpg",
+    "variants": [
+      { "name": "橄欖綠" },
+      { "name": "質感黑" }
+    ]
+  },
+  { "id": 3, "title": "復古機械式鍵盤", "price": 3200, "description": "清脆段落感與經典圓形鍵帽，支援多裝置藍牙連接。", "category": "3C數位", "image": "https://cdn-plain-me.shang-yu.com/upload_files/fonlego-rwd/prodpic/D_ACT3901-241_1_04.jpg" },
+  { 
+    "id": 4, 
+    "title": "輕量透氣運動帆布鞋", 
+    "price": 1280, 
+    "description": "高支撐鞋底設計，適合城市漫步與日常百搭穿著。", 
+    "category": "服飾鞋包", 
+    "selectedVariantIndex": 0,
+    "image": "https://img.pchome.com.tw/cs/items/DIEL09A900J03EH/l000004_1751526594.jpg?width=640",
+    "variants": [
+      { "name": "23吋" },
+      { "name": "24吋" },
+      { "name": "25吋" }
+    ]
+  },
+  { 
+    "id": 5, 
+    "title": "北歐風亞麻抱枕套", 
+    "price": 350, 
+    "description": "天然纖維材質，觸感涼爽不悶熱，居家佈置首選。", 
+    "category": "生活家居", 
+    "selectedVariantIndex": 0,
+    "variants": [
+      {
+        "name": "亞麻原色",
+        "image": "https://down-tw.img.susercontent.com/file/9efbc24faf74a343c41d0346e7baab5a"
+      },
+      {
+        "name": "鼠尾草綠",
+        "image": "https://down-tw.img.susercontent.com/file/62898f40184014f606de4ab582bfc33b"
+      }
+    ]
+  },
+  { 
+    "id": 6, 
+    "title": "降噪無線藍牙耳機", 
+    "price": 4900, 
+    "description": "強效主動降噪技術，在嘈雜環境也能享受純淨音質。", 
+    "category": "3C數位", 
+    "image": "https://qcy.com.tw/cdn/shop/files/arcbuds.jpg?v=1704358839", 
+    "variants": [
+      { "name": "黎明白" },
+      { "name": "玄墨黑" }
+    ]  
+  },
+  { "id": 7, "title": "智能感應LED檯燈", "price": 1200, "description": "三段色溫調整，防眩光設計保護雙眼。", "category": "生活家居", "image": "https://img.jollybuy.com/S220526105136797/goods/e3cd8300405f4429a47c981f26d84e97_Q50.png" },
+  { 
+    "id": 8, 
+    "title": "不鏽鋼真空保溫杯", 
+    "price": 880, 
+    "description": "長效保溫保冷 12 小時，霧面磨砂手感不留指紋。", 
+    "category": "生活家居", 
+    "image": "https://cdn-next.cybassets.com/media/W1siZiIsIjEzODU3L3Byb2R1Y3RzLzMzMjUwMzQyLzE3MzA4NzExNThfMmM1OWZhMWQ3NGQxODg1MWZjZWYuanBlZyJdLFsicCIsInRodW1iIiwiNjAweDYwMCJdXQ.jpeg?sha=95bd3aedf823f62d" ,
+    "variants": [
+      { "name": "600ml" },
+      { "name": "700ml" }
+    ]  
+  },
+  { 
+    "id": 9, 
+    "title": "純棉法蘭絨寬鬆襯衫", 
+    "price": 790, 
+    "description": "柔軟刷毛處理，保暖且親膚，簡約版型修飾身材。", 
+    "category": "服飾鞋包", 
+    "image": "https://img.alicdn.com/imgextra/i2/669642169/O1CN01OqTntq1RtS8ghcrmA_!!4611686018427383225-2-item_pic.png_q50.jpg_.webp",
+    "variants": [
+      { "name": "M" },
+      { "name": "L" },
+      { "name": "XL" }
+    ]    
+  },
+  { "id": 10, "title": "簡約實木手錶收藏盒", "price": 1500, "description": "黑胡桃木打造，透明天窗設計，完美收納您的珍藏。", "category": "配件飾品", "image": "https://down-tw.img.susercontent.com/file/tw-11134207-7r98z-lnutvwwq1z5l5d" },
+  { "id": 11, "title": "自動研磨義式咖啡機", "price": 8500, "description": "一鍵自動研磨與萃取，讓你在家也能品嚐專業風味。", "category": "生活家居", "image": "https://www.jinkon-polar.com/upload/product/202401091429410.jpg" },
+  { "id": 12, "title": "大容量防潑水相機包", "price": 2600, "description": "加厚內襯保護昂貴器材，多口袋設計方便收納配件。", "category": "3C數位", "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/492x492ex/image/vendor_inventory/3cdd/a36c4138a9d1b3a35c3d3805ccb5605185ed2acb0fab9b8abe728a21213b.png" },
+  { "id": 13, "title": "復古銀飾雕刻戒指", "price": 1100, "description": "925 純銀手工雕琢，低調展現獨特的個人風格。", "category": "配件飾品", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-9EizLXAbnfGS3QxdYGGf1LPFfm9Z4_Svkw&s" },
+  { "id": 14, "title": "專業瑜珈止滑墊", "price": 1450, "description": "TPE 環保材質，高密度支撐緩衝，運動不傷關節。", "category": "戶外運動", "image": "https://img.yec.tw/zp/MerchandiseImages/8DBEB01951-SP-9773192.jpg" },
+  { "id": 15, "title": "智能多功能運動手環", "price": 1980, "description": "血氧監測、心率記錄、睡眠品質分析，長續航 14 天。", "category": "3C數位", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTAUUKIx1xMTj2KRkn_6xMPJZQ86DoEwsspgw&s" },
+  { "id": 16, "title": "手沖咖啡長頸細口壺", "price": 1380, "description": "穩定控流垂直水柱，讓手沖咖啡的風味更加穩定。", "category": "生活家居", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdZZdJB-GkAVvq6tDoD0wUaqMX0Oacfp5Fvw&s" },
+  { "id": 17, "title": "香氛大豆蠟燭", "price": 650, "description": "採用天然精油，散發迷人森林氣息，舒緩身心壓力。", "category": "生活家居", "image": "https://lcp-prod-obs.line-scdn.net/0hSYlYRjgDDHZRIB84Xy9zIQJ9AAdiUQh-OFgRS3VlLhkYFDdWbR0_dgt5AC8HUhhCBg0idjVmLR4XESpGDRoWdXVpOh0mWzVFFQA8dRRrLDMMVjB8N04_YA/f640w" },
+  { "id": 18, "title": "經典飛行員金框墨鏡", "price": 2200, "description": "抗 UV400 專業濾光，展現帥氣又不失優雅。", "category": "配件飾品", "image": "https://shoplineimg.com/5912f3679f9a4f158c000e90/64797fdbff6a5400174d34f1/800x.jpg?" },
+  { "id": 19, "title": "輕便型戶外野營桌", "price": 1850, "description": "快速組裝設計，鋁合金材質耐磨耐熱，露營必備。", "category": "戶外運動", "image": "https://img.yec.tw/zp/MerchandiseImages/73707C311D-SP-16879400.jpg" },
+  { "id": 20, "title": "職人手縫帆布筆電袋", "price": 980, "description": "加厚防震層與防潑水處理，給筆電最安心的防護。", "category": "服飾鞋包", "image": "https://down-tw.img.susercontent.com/file/tw-11134207-7r98p-lpt5l367r5duf1" },
+  { "id": 21, "title": "超靜音負離子吹風機", "price": 3200, "description": "高濃度負離子護髮，吹乾同時保持秀髮水潤不乾澀。", "category": "生活家居", "image": "https://img.pchome.com.tw/cs/items/DMAH0OA900B2PE4/000001_1609392960.jpg" },
+  { "id": 22, "title": "專業級單眼三腳架", "price": 3800, "description": "碳纖維輕量設計，球形雲台支援多角度平滑拍攝。", "category": "3C數位", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSBpOnC3XmvfuwnM1UAoVegrFdZvomXUEqW8g&s" },
+  { "id": 23, "title": "迷你行動投影機", "price": 7200, "description": "口袋大小也能投影百吋螢幕，家庭劇院輕鬆帶著走。", "category": "3C數位", "image": "https://img.pchome.com.tw/cs/items/DPAE6ZA900J1W21/000007_1753089622.jpg?width=640" },
+  { "id": 24, "title": "天然橡木多層書架", "price": 4500, "description": "質感木紋搭配極簡線條，為閱讀空間增添人文氣息。", "category": "生活家居", "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/492x492ex/image/vendor_inventory/70c4/1b5f16e9f2e6a5087b58718309d4fec18c97a36837b693e5bffe36c8afbc.jpg" },
+  { "id": 25, "title": "運動型防水自動腕錶", "price": 5800, "description": "200米深度防水，機械動力無需電池，探險者首選。", "category": "配件飾品", "image": "https://i4.momoshop.com.tw/1692387554/goodsimg/0010/597/339/10597339_O_m.webp" },
+  { "id": 26, "title": "登山專用輕量後背包", "price": 3600, "description": "背負系統符合人體工學，分攤重量減輕背部負擔。", "category": "戶外運動", "image": "https://i4.momoshop.com.tw/1745643628/goodsimg/0011/652/414/11652414_OR_m.webp" },
+  { "id": 27, "title": "高密度記憶枕", "price": 1800, "description": "智慧回彈曲線設計，完美貼合頸椎，告別落枕痛苦。", "category": "生活家居", "image": "https://tshop.r10s.com/0ae/715/6a5b/f6f4/d0ea/2e30/7ddb/1130ed9f980242ac110005.jpg?_ex=486x486" },
+  { "id": 28, "title": "全鋁合金行李箱", "price": 4800, "description": "20吋，防撞邊角與靜音飛機輪，讓商務出差更輕鬆優雅。", "category": "配件飾品", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcOMQWL45s-U0r19To2-m9QmHTVoble8_Hdw&s" },
+  { "id": 29, "title": "日系寬版繭型長褲", "price": 1380, "description": "垂墜感面料，修飾腿型，打造鬆弛感穿搭必備項目。", "category": "服飾鞋包", "image": "https://media.karousell.com/media/photos/products/2023/1/21/___city_boy____goopi____1674312002_06855fa2_progressive.jpg" },
+  { "id": 30, "title": "智能溫控氣炸鍋", "price": 3900, "description": "減油 80% 也能做出酥脆口感，多種內建食譜一鍵搞定。", "category": "生活家居", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwi09JxyHDaByVgIavCDaAVOYgh30HqmY-aA&s" },
+  { "id": 31, "title": "專業羽毛球拍", "price": 2800, "description": "高模量碳素纖維，揮拍速度提升，控球精準有力。", "category": "戶外運動", "image": "https://img.alicdn.com/imgextra/O1CN012zzFRQ21gSyavF8ui_!!6000000007014-2-yinhe.png_q50.jpg_.webp" },
+  { "id": 32, "title": "極速無線充電座", "price": 950, "description": "15W 快充技術，放上即充，桌面上最整潔的充電方案。", "category": "3C數位", "image": "https://i4.momoshop.com.tw/1759832959/goodsimg/0012/659/329/12659329_OR_m.webp" },
+  { "id": 33, "title": "文青風帆布手提袋", "price": 420, "description": "厚磅耐磨帆布，簡約字母印花，環保出門不失風格。", "category": "服飾鞋包", "image": "https://img.pchome.com.tw/cs/items/DIBF2EA900F3GBN/000001_1653554663.jpg?width=640" },
+  { "id": 34, "title": "手工編織掛毯", "price": 1200, "description": "波西米亞風情，為單調的牆面注入藝術溫暖靈魂。", "category": "生活家居", "image": "https://mall.iopenmall.tw/website/uploads_product/website_6935/P0693505163701_4_43466843.jpeg?hash=80142" },
+  { "id": 35, "title": "經典珍珠鎖骨鍊", "price": 1900, "description": "選用頂級天然淡水珍珠，襯托頸部線條優雅氣質。", "category": "配件飾品", "image": "https://b2eimg.pxec.com.tw/00198557/a0737a2015b74ac0a1ee7ecf856d7d88.jpg" },
+  { "id": 36, "title": "攜帶型濾掛咖啡組合", "price": 680, "description": "嚴選世界各地精品豆，新鮮烘焙，隨時享受極致風味。", "category": "生活家居", "image": "https://www.vivatv.com.tw/common/images/product/3290582025/2.jpg?t=1766123528133" },
+  { "id": 37, "title": "美式重磅棒球外套", "price": 2500, "description": "經典拼接設計，厚實內裡禦寒保暖，美式校園風十足。", "category": "服飾鞋包", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLv92UAJE7auwFS_DsGb_P1ExCpNLdw3sHHQ&s" },
+  { "id": 38, "title": "多功能健身握力器", "price": 380, "description": "可調節阻力強度，適合各階段訓練需求。", "category": "戶外運動", "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6y1ZUT3fi5PtaC0CMkl5FLylZY5TDR5xPug&s" },
+  { "id": 39, "title": "高質感網格記事本", "price": 290, "description": "特製不暈墨紙質，流暢書寫體驗，記錄生活點滴。", "category": "生活家居", "image": "https://down-tw.img.susercontent.com/file/sg-11134201-7rffl-m9ternppxvmh1a_tn.webp" },
+  { "id": 40, "title": "迷你便攜式吸塵器", "price": 1100, "description": "強勁吸力輕鬆清理車內或桌面碎屑，無線使用超方便。", "category": "生活家居", "image": "https://image-cdn-flare.qdm.cloud/q6b04920d69b92/image/data/2022/07/14/17b5b118df814db85904999d631089b3.jpg" }
+]

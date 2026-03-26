@@ -1,0 +1,27 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.global-toast {
+  position: fixed;
+  top: 120px;
+  left: 50%;         /* 先移動到螢幕寬度的一半 */
+  transform: translateX(-50%); /* 再往左回推自身寬度的一半，達成完美置中 */
+  background: $black;
+  color: $white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px $gray-dark;
+  z-index: 10000; /* 確保在最上層 */
+  max-width: 350px;       /* 限制最大寬度 */
+  line-height: 1.5;      /* 增加行高 */
+  text-align: center;
+  word-break: break-all; /* 防止長單字撐破框框 */
+}
+
+.toast-fade-enter-active, .toast-fade-leave-active {
+  transition: all 0.4s ease;
+}
+.toast-fade-enter-from, .toast-fade-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -20px); 
+}

@@ -1,0 +1,31 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.skeleton .skeleton-img,
+.skeleton .skeleton-text,
+.skeleton .skeleton-btn {
+    background: linear-gradient(90deg, #f2f2f2 25%, #e9e9e9 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 2s infinite linear;
+}
+
+.card-content-enter {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* 模擬文字形狀 */
+.skeleton-img { width: 100%; aspect-ratio: 1/1; }
+.skeleton-text { height: 1rem; border-radius: 4px; }
+.skeleton-text.title { width: 80%; margin-bottom: 10px; }
+.skeleton-text.price { width: 40%; }
+.skeleton-btn { height: 40px; border-radius: 6px; margin-top: auto; }

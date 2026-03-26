@@ -1,0 +1,42 @@
+[
+  {
+    "account": "Lia",
+    "password": "0105",
+    "data": { "id": 1, "name": "轉行仔", "email": "poorguy@example.com" }
+  },
+  {
+    "account": "Amutu",
+    "password": "0127",
+    "data": { "id": 2, "name": "班長大人", "email": "general@example.com" }
+  },
+  {
+    "account": "Ruby",
+    "password": "0123",
+    "data": { "id": 3, "name": "太后", "email": "prime@example.com" }
+  },
+  {
+    "account": "Ida",
+    "password": "0106",
+    "data": { "id": 4, "name": "季ㄚ", "email": "sister@example.com" }
+  },
+  {
+    "account": "Rita",
+    "password": "0811",
+    "data": { "id": 5, "name": "陛下", "email": "king@example.com" }
+  },
+  {
+    "account": "Ivy",
+    "password": "1206",
+    "data": { "id": 6, "name": "美女", "email": "beauty@example.com" }
+  },
+  {
+    "account": "Sherman",
+    "password": "0701",
+    "data": { "id": 7, "name": "軍師", "email": "prime@example.com" }
+  },
+  {
+    "account": "Sam",
+    "password": "1230",
+    "data": { "id": 8, "name": "Sam", "email": "sam@example.com" }
+  }
+]
