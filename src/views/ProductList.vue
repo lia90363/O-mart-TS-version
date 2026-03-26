@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'; 
 import { useRoute } from 'vue-router';
-import { useProductStore } from "@/stores/productStore.js";
+import { useProductStore } from "@/stores/productStore";
 import { useCartStore } from '@/stores/cartStore'
 
 const productStore = useProductStore();
@@ -11,8 +11,8 @@ const route = useRoute();
 watch(
   () => route.query.category,
   async (newCat) => {
-    // 關鍵修正：如果 newCat 是 undefined 或空值，一定要轉成 'all'
-    productStore.category = newCat || 'all'; 
+    const category = Array.isArray(newCat) ? newCat[0] : newCat;
+    productStore.category = category || 'all'; 
     
     await productStore.fetchProducts();
   },
@@ -25,7 +25,7 @@ onMounted(() => {});
 <template>
     <section class="container">
         <!-- loading 時產生假項目，看起來像資料快出來了 -->
-        <ul v-if="productStore.isLoading" class="product-grid">
+        <ul v-if="productStore.loading" class="product-grid">
             <li v-for="n in 8" :key="n" class="card skeleton">
                 <div class="skeleton-img"></div>
                 <div class="card-body">

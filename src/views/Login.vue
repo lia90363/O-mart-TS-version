@@ -26,14 +26,15 @@ const handleLogin = async () => {
     const res = await authStore.login(loginForm.account, loginForm.password);
     
     if (res.success) {
-      const redirectPath = route.query.redirect || '/';
+      const redirectPath = (route.query.redirect as string) || '/';
       router.push(redirectPath);
       toast.showToast('歡迎回來！'); 
     } else {
       toast.showToast(res.message || '帳號或密碼錯誤');
     }
   } catch (err) {
-    toast.showToast(err.message || '伺服器連線異常');
+    const errorMessage = err instanceof Error ? err.message : '伺服器連線異常';
+    toast.showToast(errorMessage);
   } finally {
     isLoading.value = false;
   }
@@ -50,14 +51,14 @@ const handleRegister = async () => {
 
   // 真正的註冊邏輯
   if (!loginForm.account || !loginForm.password) {
-      toast.showToast('請輸入完整的帳號密碼');
+    toast.showToast('請輸入完整的帳號密碼');
     return;
   }
   
   isLoading.value = true;
   await new Promise(resolve => setTimeout(resolve, 800)); 
   
-  toast.showToast('註冊成功！其實還沒有註冊功能QQ');
+  toast.showToast('註冊功能測試中，請使用測試帳密 \n Test/1111');
   
   isRegisterMode.value = false; // 成功後切換回登入模式
   isLoading.value = false;

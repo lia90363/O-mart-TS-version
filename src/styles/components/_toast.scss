@@ -16,6 +16,7 @@
   line-height: 1.5;      /* 增加行高 */
   text-align: center;
   word-break: break-all; /* 防止長單字撐破框框 */
+  white-space: pre-line; 
 }
 
 .toast-fade-enter-active, .toast-fade-leave-active {

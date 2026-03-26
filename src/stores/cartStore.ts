@@ -2,40 +2,66 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useToastStore } from './useToastStore'
 
+export interface Product {
+  id: number;
+  title: string;
+  price: number;
+  description: string;
+  category: string;
+  image?: string;
+  variants?: {
+    name: string;
+    image?: string;
+  }[];
+}
+
+export interface CartItem extends Product {
+  qty: number;
+  selectedVariantIndex: number;
+  selectedVariantName?: string;
+}
+
 export const useCartStore = defineStore('cart', () => {
-  const cart = ref([])
+  const cart = ref<CartItem[]>([])
   const toast = useToastStore()
 
   // 加入購物車
-  const addToCart = (product, qty = 1) => {
+  const addToCart = (
+    product: Product, 
+    qty: number | string = 1,
+    variantIndex: number = 0, 
+    variantName?: string
+  ) => {
     const numQty = Math.max(1, Math.floor(Number(qty) || 1));
 
     const index = cart.value.findIndex((item) => 
       item.id === product.id && 
-      item.selectedVariantIndex === product.selectedVariantIndex
+      item.selectedVariantIndex === variantIndex
     );
 
     if (index === -1) {
-      cart.value.push({ 
-        ...product, 
-        qty: numQty
-      });
+      const newItem: CartItem = {
+        ...product,
+        qty: numQty,
+        selectedVariantIndex: variantIndex,
+        selectedVariantName: variantName
+      };
+      cart.value.push(newItem);
     } else {
-      cart.value[index].qty += numQty;
+      cart.value[index]!.qty += numQty;
     }
 
-    // 💡 關鍵修正：不要去讀取 product.variants，改用傳進來的 selectedVariantName
-    const variantLabel = product.selectedVariantName ? ` (${product.selectedVariantName})` : '';
+    const variantLabel = variantName ? ` (${variantName})` : '';
     toast.showToast(`成功將 ${product.title}${variantLabel} 加入購物車！`);
   }
 
-  const removeFromCart = (productId, variantIndex) => {
+  const removeFromCart = (productId: number, variantIndex: number) => {
     cart.value = cart.value.filter(item => 
       !(item.id === productId && item.selectedVariantIndex === variantIndex)
     )
   }
 
-  const updateQty = (productId, variantIndex, num) => {
+  const updateQty = (productId: number, variantIndex: number, num: number) => {
     const item = cart.value.find(i => 
       i.id === productId && i.selectedVariantIndex === variantIndex
     )
@@ -46,7 +72,7 @@ export const useCartStore = defineStore('cart', () => {
     if (item.qty <= 0) removeFromCart(productId, variantIndex)
   }
 
-  const updateQtyByInput = (productId, value, variantIndex) => {
+  const updateQtyByInput = (productId: number, value: string | number, variantIndex: number) => {
     // 加上雙重判定：ID + 規格索引
     const item = cart.value.find(i => 
       i.id === productId && i.selectedVariantIndex === variantIndex

@@ -1,12 +1,19 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia';
 
+export interface Member {
+    name: string,
+    account: string,
+    password: string,
+    data: string[],
+}
+
 export const useAuthStore = defineStore('auth', () => {
-    const user = ref(null);
+    const user = ref<Member | null>(null);
     const token = ref('');
     const isLoggedIn = computed(() => !!token.value);
 
-    async function login(account, password) {
+    async function login(account: string, password: string) {
         try {
             // 使用 window.location.origin 確保路徑從網站根目錄開始
             const url = `${window.location.origin}/member.json?t=${Date.now()}`;
@@ -23,13 +30,13 @@ export const useAuthStore = defineStore('auth', () => {
                 throw new Error('抓取不到正確的成員資料格式');
             }
 
-            const members = await response.json();
+            const members = await response.json() as Member[];
 
             // 搜尋邏輯
             const member = members.find(m => m.account === account && m.password === password);
 
             if (member) {
-                user.value = member.data;
+                user.value = member;
                 token.value = `mock-jwt-${member.account}-${Math.random().toString(36).substring(2)}`;
                 return { success: true };
             } else {

@@ -38,5 +38,10 @@
     "account": "Sam",
     "password": "1230",
     "data": { "id": 8, "name": "Sam", "email": "sam@example.com" }
+  },
+  {
+    "account": "Test",
+    "password": "1111",
+    "data": { "id": 9, "name": "測試員", "email": "test@example.com" }
   }
 ]

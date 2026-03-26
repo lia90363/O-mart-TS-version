@@ -15,6 +15,13 @@ const checkOut = () => {
         router.push('/');
     }, 1000);
 };
+
+// 在 Script 定義處理函式，解決 e.target.value 的型別問題
+const handleQtyChange = (e: Event, id: number, variantIndex: number) => {
+    // 告訴 TS 這個 e.target 是一個 HTML 輸入框
+    const target = e.target as HTMLInputElement;
+    cartStore.updateQtyByInput(id, target.value, variantIndex);
+};
 </script>
 
 <template>
@@ -46,7 +53,7 @@ const checkOut = () => {
                         type="number" 
                         class="qty-input"
                         :value="item.qty" 
-                        @change="(e) => cartStore.updateQtyByInput(item.id, e.target.value, item.selectedVariantIndex)"
+                        @change="(e) => handleQtyChange(e, item.id, item.selectedVariantIndex)"
                         min="1"
                     />
                     <button @click="cartStore.updateQty(item.id, item.selectedVariantIndex, 1)" class="qty-btn">+</button>

@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProductStore } from '@/stores/productStore'
-import { useCartStore } from '@/stores/cartStore'
+import { useCartStore, type Product } from '@/stores/cartStore'
 import { useToastStore } from '@/stores/useToastStore'
 
 const route = useRoute()
@@ -12,43 +12,47 @@ const quantity = ref(1)
 const toastStore = useToastStore()
 const selectedVariantIndex = ref(0);
 
+// 標註 item 的型別為 Product 或 null
+const item = computed<Product | null>(() => {
+    return productStore.products.find(p => Number(p.id) === id.value) || null
+})
+
 // 計算當前應該顯示的圖片與名稱
 // 核心修正：加入多重備援邏輯
 const currentDisplayImage = computed(() => {
   if (!item.value) return '';
 
-  // 1. 檢查是否有規格，且該規格是否有圖
-  const hasVariants = item.value.variants && item.value.variants.length > 0;
-  if (hasVariants) {
-    const variant = item.value.variants[selectedVariantIndex.value];
-    if (variant && variant.image) return variant.image; // 優先回傳規格圖
+  // 檢查是否有規格，且該規格是否有圖
+  const variants = item.value.variants;
+  if (variants && variants.length > 0) {
+    const variant = variants[selectedVariantIndex.value];
+    if (variant && variant.image) return variant.image;
   }
 
-  // 2. 如果沒規格、或規格沒圖（如鞋子），回傳商品外層主圖
+  // 如果沒規格、或規格沒圖（如鞋子），回傳商品外層主圖
   return item.value.image || '';
 });
 
 const handleAddToCart = () => {
-  // 修正：不要因為沒有 variants 就 return
+
+  // 不要因為沒有 variants 就 return
   if (!item.value) return;
 
   const hasVariants = item.value.variants && item.value.variants.length > 0;
   
+  const variants = item.value.variants;
   // 安全讀取規格名稱
   let selectedName = '';
   if (hasVariants) {
-    selectedName = item.value.variants[selectedVariantIndex.value]?.name || '';
+    selectedName = variants?.[selectedVariantIndex.value]?.name || '';
   }
 
-  const payload = {
-    ...item.value,
-    // 如果沒規格，預設給 index 0
-    selectedVariantIndex: hasVariants ? selectedVariantIndex.value : 0,
-    selectedVariantName: selectedName,
-    image: currentDisplayImage.value 
-  };
-
-  cartStore.addToCart(payload, quantity.value);
+  cartStore.addToCart(
+    item.value, 
+    quantity.value, 
+    hasVariants ? selectedVariantIndex.value : 0,
+    selectedName
+  );
   
   const toastMsg = selectedName 
     ? `已加入 ${quantity.value} 件 ${item.value.title} (${selectedName})`
@@ -61,8 +65,8 @@ const handleAddToCart = () => {
 const id = computed(() => Number(route.params.id))
 
 // 修正 input 的手動輸入問題
-const updateQuantity = (val) => {
-  const num = parseInt(val)
+const updateQuantity = (val: string | number) => {
+  const num =  typeof val === 'string' ? parseInt(val) : val;
   if (isNaN(num) || num < 1) {
     quantity.value = 1
   } else {
@@ -75,12 +79,6 @@ onMounted(async () => {
   if (productStore.products.length === 0) {
     await productStore.fetchProducts()
   }
-})
-
-// 從 store 找資料，若找不到回傳 null
-const item = computed(() => {
-    const found = productStore.products.find(p => Number(p.id) === id.value) || null
-    return found
 })
 
 watch(() => route.params.id, () => {

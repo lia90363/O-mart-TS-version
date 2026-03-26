@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue' // 刪掉 computed
 import { useRouter, useRoute } from 'vue-router'
 import { useProductStore } from '@/stores/productStore'
@@ -11,8 +11,14 @@ const route = useRoute()
 
 const tempKeyword = ref('')
 const debounced = useDebounce(tempKeyword, 300)
+// useDebounce 寫了泛型，這裡 debounced 會自動推斷為 Ref<string>
 
-const categories = [
+interface CategoryOption {
+  value: string;
+  label: string;
+}
+
+const categories: CategoryOption[] = [
   { value: 'all', label: '全部' },
   { value: '生活家居', label: '生活家居' }, 
   { value: '3C數位', label: '3C數位' },

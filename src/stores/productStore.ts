@@ -1,9 +1,10 @@
 import { ref, computed } from 'vue'
 import { defineStore } from "pinia";
 import { getProducts } from "@/api/product";
+import type { Product } from "@/stores/cartStore"; 
 
 export const useProductStore = defineStore("product", () => {
-  const products = ref([]);
+  const products = ref<Product[]>([]);
   const loading = ref(false);
   const keyword = ref('');
   const category = ref('all');

@@ -41,10 +41,13 @@ import { useToastStore } from '@/stores/useToastStore'
 import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute()
-const authStore = useAuthStore();
-const router = useRouter();
+const router = useRouter()
+const productStore = useProductStore()
+const authStore = useAuthStore()
+const cartStore = useCartStore()
+const toastStore = useToastStore()
 
-const productStore = useProductStore();
+const cartCount = computed(() => cartStore.totalItems)
 
 const handleLogoClick = () => {
   productStore.resetSearch()
@@ -60,22 +63,15 @@ const handleLogoClick = () => {
 }
 
 const handleLogout = () => {
+  // 取得當前路由，TS 會自動推斷它是 RouteLocationNormalized
   const currentRoute = router.currentRoute.value;
   
   authStore.logout();
 
-  if (toastStore) {
-    toastStore.showToast('您已成功登出！');
-  }
+  toastStore.showToast('您已成功登出！');
 
   if (currentRoute.meta?.requiresAuth || currentRoute.path === '/cart') {
     router.push('/');
   }
 };
-
-const cartStore = useCartStore()
-
-const cartCount = computed(() => cartStore.totalItems)
-
-const toastStore = useToastStore()
 </script>
