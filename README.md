@@ -40,15 +40,15 @@ Vercel：部署專案
 ◇處理 LocalStorage（persist）與快取造成的資料不同步問題  
 ◇使用 Toast 提升提示體驗，取代傳統 alert  
 
-### 📂 架構說明  
-src/
-  ├─ api/          # 封裝 API 請求邏輯（Mock Data 獲取）
-  ├─ components/   # 可複用 UI 元件（如：Navbar, Footer, Card）
-  ├─ composables/  # 封裝組合式邏輯（如：Debounce, 視窗監聽）
-  ├─ plugins/      # 第三方套件設定（如：Pinia, Toast 插件）
-  ├─ router/       # 路由定義與導航守衛
-  ├─ stores/       # Pinia 狀態管理（Cart, User, Products）
-  ├─ styles/       # 全域 SCSS/CSS 樣式管理
-  └─ views/        # 各頁面進入點
-public/
-  └─ *.json        # 模擬後端資料源 (Mock Data)
+### 📂 架構說明    
+src/  
+  ├─ api/          # 封裝 API 請求邏輯（Mock Data 獲取）  
+  ├─ components/   # 可複用 UI 元件（如：Navbar, Footer, Card）  
+  ├─ composables/  # 封裝組合式邏輯（如：Debounce, 視窗監聽）  
+  ├─ plugins/      # 第三方套件設定（如：Pinia, Toast 插件）  
+  ├─ router/       # 路由定義與導航守衛  
+  ├─ stores/       # Pinia 狀態管理（Cart, User, Products）  
+  ├─ styles/       # 全域 SCSS/CSS 樣式管理  
+  └─ views/        # 各頁面進入點  
+public/  
+  └─ *.json        # 模擬後端資料源 (Mock Data)  
