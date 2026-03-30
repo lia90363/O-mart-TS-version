@@ -6,7 +6,7 @@
 [TypeScript]
 
 ### 🎯 專案介紹  
-🛒 模擬電商完整流程（商品瀏覽 → 加入購物車 → 結帳）
+🛒 模擬電商完整流程（商品瀏覽 → 加入購物車 → 結帳）  
 💡 專注於狀態管理與資料持久化，模擬實務開發情境
 
 [🔗 立即試用 Demo](https://o-mart-ts-version.vercel.app/)
@@ -36,6 +36,7 @@ Vercel：部署專案
 - 💳 **結帳流程**  
 
 ### 💡 核心學習  
+◇實踐 TypeScript 重構，定義商品與購物車介面 (Interface)  
 ◇注重使用者體驗（UX），例如點擊首頁 Logo 返回頂部  
 ◇處理 LocalStorage（persist）與快取造成的資料不同步問題  
 ◇使用 Toast 提升提示體驗，取代傳統 alert  
