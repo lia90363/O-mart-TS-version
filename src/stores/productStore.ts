@@ -8,6 +8,7 @@ export const useProductStore = defineStore("product", () => {
   const loading = ref(false);
   const keyword = ref('');
   const category = ref('all');
+  const error = ref<string | null>(null);
 
   const filteredProducts = computed(() => {
     // 預先處理搜尋字串，避免每次迴圈都重複處理
@@ -34,12 +35,18 @@ export const useProductStore = defineStore("product", () => {
     if (products.value.length > 0) return;
 
     loading.value = true;
+    error.value = null; // error reset
+
     try {
       const res = await getProducts();
       console.log("API 吐出來的原始資料:", res.data);
       products.value = res.data || [];
-    } catch (error) {
-      console.error("取得商品失敗", error);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        error.value = err.message;
+      } else {
+        error.value = '未知錯誤';
+      }
     } finally {
       loading.value = false;
     }
@@ -55,6 +62,7 @@ export const useProductStore = defineStore("product", () => {
     loading, 
     keyword, 
     category, 
+    error,
     filteredProducts, 
     resetSearch,
     fetchProducts 

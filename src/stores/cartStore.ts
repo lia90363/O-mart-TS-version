@@ -48,7 +48,8 @@ export const useCartStore = defineStore('cart', () => {
       };
       cart.value.push(newItem);
     } else {
-      cart.value[index]!.qty += numQty;
+      const item = cart.value[index];
+      if (item) item.qty += numQty;
     }
 
     const variantLabel = variantName ? ` (${variantName})` : '';

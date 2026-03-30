@@ -1,33 +1,40 @@
-export function piniaPersist(context) {
-    const { store, options } = context;
-    // 取得 Store 定義時傳入的 persist 設定
-    const persistOptions = options.persist;
+import { type PiniaPluginContext } from 'pinia';
 
-    // 如果沒有設定 persist: true 或 persist 物件，就不執行持久化
-    if (!persistOptions) return;
+export function piniaPersist(context: PiniaPluginContext) {
+  const { store, options } = context;
+  const persistOptions = options.persist;
 
-    const storageKey = `pinia-${store.$id}`;
-    const persistedState = localStorage.getItem(storageKey);
+  if (!persistOptions) return;
 
-    if (persistedState) {
-        store.$patch(JSON.parse(persistedState));
+  const storageKey = `pinia-${store.$id}`;
+  const persistedState = localStorage.getItem(storageKey);
+
+  if (persistedState) {
+    try {
+      // 使用 $patch 前先解析，並確保它是個物件
+      store.$patch(JSON.parse(persistedState));
+    } catch (e) {
+      console.error(`Failed to parse persisted state for ${store.$id}:`, e);
     }
+  }
 
-    let timer = null;
-    store.$subscribe((mutation, state) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            let stateToSave = state;
+  let timer: ReturnType<typeof setTimeout> | null = null;
 
-            // 💡 關鍵：如果 persist 有設定 paths，就只存指定的 key
-            if (persistOptions.paths) {
-                stateToSave = persistOptions.paths.reduce((acc, key) => {
-                    acc[key] = state[key];
-                    return acc;
-                }, {});
-            }
+  store.$subscribe((_mutation, state) => {
+    if (timer) clearTimeout(timer);
 
-            localStorage.setItem(storageKey, JSON.stringify(stateToSave));
-        }, 300);
-    });
+    timer = setTimeout(() => {
+      let stateToSave: Record<string, any> = state;
+
+      // 💡 判斷 persist 是否為物件且包含 paths
+      if (typeof persistOptions === 'object' && persistOptions.paths) {
+        stateToSave = persistOptions.paths.reduce((acc, key) => {
+          acc[key] = (state as any)[key];
+          return acc;
+        }, {} as Record<string, any>);
+      }
+
+      localStorage.setItem(storageKey, JSON.stringify(stateToSave));
+    }, 300);
+  });
 }
