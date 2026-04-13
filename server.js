@@ -5,7 +5,7 @@ import mysql from 'mysql2/promise';
 const app = express();
 app.use(cors({
   origin: [
-    'https://vercel.com/lia90363-9852s-projects/o-mart-ts-version', 
+    'https://o-mart-ts-version.vercel.app/', 
     'http://localhost:5173',  
     'http://localhost:3000'
   ],
@@ -18,20 +18,24 @@ const PORT = process.env.PORT || 3000;
 
 const localDbUrl = 'mysql://root:MySQL123!@localhost:3306/shopping_cart_db';
 
+console.log('當前資料庫連線網址:', process.env.MYSQL_URL ? '已偵測到雲端變數' : '未偵測到變數，使用本地設定');
+
 // 優先使用 Railway 提供給你的環境變數 MYSQL_URL，沒有的話才連本地
 const dbUrl = process.env.MYSQL_URL || localDbUrl;
 
 const pool = mysql.createPool(dbUrl);
 
+console.log('連線目標:', dbUrl.split('@')[1]);
+
 // 測試連線是否成功 (這對 Debug 非常有幫助)
 pool.getConnection()
   .then(conn => {
-    console.log('--- 成功連線至資料庫 ---');
+    console.log(`--- 成功連線至資料庫：${conn.config.database} ---`);
     conn.release();
   })
   .catch(err => {
     console.error('--- 資料庫連線失敗 ---');
-    console.error('原因:', err.message);
+    console.error('錯誤訊息:', err.message);
   });
 
 // [GET] 測試路徑
@@ -124,9 +128,11 @@ app.post('/api/cart/merge', async (req, res) => {
             );
 
             if (existing.length > 0) {
+                // 記得加 [0]
+                const newQty = existing[0].qty + item.qty; 
                 await pool.query(
                     "UPDATE cart_items SET qty = ? WHERE id = ?",
-                    [existing[0].qty + item.qty, existing[0].id]
+                    [newQty, existing[0].id]
                 );
             } else {
                 await pool.query(
