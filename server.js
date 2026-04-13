@@ -4,9 +4,13 @@ import mysql from 'mysql2/promise';
 
 const app = express();
 app.use(cors({
-  origin: '*',
+  origin: [
+    'https://vercel.com/lia90363-9852s-projects/o-mart-ts-version', 
+    'http://localhost:5173',  
+    'http://localhost:3000'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
+  credentials: true 
 }));
 app.use(express.json());
 
