@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
+import bcrypt from 'bcrypt';
 
+const saltRounds = 10; // 加密強度
 const app = express();
 app.use(cors({
   origin: [
@@ -46,24 +48,29 @@ app.get('/test', (req, res) => res.send('伺服器有通喔！'));
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    // 將 members 改為 users
-    const [rows] = await pool.query(
-      "SELECT id, name, email FROM users WHERE email = ? AND password = ?", 
-      [email, password]
-    );
+    // 1. 先找有沒有這個 email
+    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
 
-    if (rows.length > 0) {
+    if (rows.length === 0) {
+      return res.status(401).json({ success: false, message: '帳號或密碼錯誤' });
+    }
+
+    const user = rows[0];
+
+    // 2. 關鍵修改：比對「輸入的密碼」與「資料庫的加密密碼」
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (isMatch) {
       res.json({
         success: true,
-        user: rows[0], // 回傳第一筆找到的使用者資料
+        user: { id: user.id, name: user.name, email: user.email }, // 不要回傳密碼
         token: 'fake-jwt-token'
       });
     } else {
       res.status(401).json({ success: false, message: '帳號或密碼錯誤' });
     }
   } catch (error) {
-    console.error('Login Error:', error);
-    res.status(500).json({ error: '伺服器登入出錯' });
+    res.status(500).json({ error: '伺服器錯誤' });
   }
 });
 
@@ -150,25 +157,19 @@ app.post('/api/cart/merge', async (req, res) => {
 // [POST] 註冊新會員
 app.post('/api/register', async (req, res) => {
   const { email, password, name } = req.body;
-
   try {
-    // 檢查帳號是否已存在
     const [existing] = await pool.query("SELECT id FROM users WHERE email = ?", [email]);
-    
-    if (existing.length > 0) {
-      return res.status(400).json({ success: false, message: '此帳號已被註冊' });
-    }
+    if (existing.length > 0) return res.status(400).json({ success: false, message: '此帳號已被註冊' });
 
-    // 寫入新會員 (實務上密碼建議加密)
-    const [result] = await pool.query(
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    await pool.query(
       "INSERT INTO users (email, password, name) VALUES (?, ?, ?)",
-      [email, password, name]
+      [email, hashedPassword, name] // 存入加密後的密碼
     );
-
-    res.json({ success: true, message: '註冊成功！', userId: result.insertId });
+    res.json({ success: true, message: '註冊成功！' });
   } catch (error) {
-    console.error('Register Error:', error);
-    res.status(500).json({ success: false, message: '伺服器註冊出錯' });
+    res.status(500).json({ success: false, message: '註冊失敗' });
   }
 });
 
