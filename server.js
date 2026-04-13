@@ -4,11 +4,7 @@ import mysql from 'mysql2/promise';
 
 const app = express();
 app.use(cors({
-  origin: [
-    'https://o-mart-ts-version.vercel.app/', 
-    'http://localhost:5173',  
-    'http://localhost:3000'
-  ],
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true 
 }));
@@ -76,6 +72,11 @@ app.get('/api/products', async (req, res) => {
       LEFT JOIN product_variants v ON p.id = v.product_id
     `);
 
+    // 如果沒抓到資料，直接回傳空陣列，不要執行 reduce
+    if (!rows || rows.length === 0) {
+      return res.json([]);
+    }
+
     const products = rows.reduce((acc, row) => {
       const { id, title, price, description, category, variant_id, variant_name, variant_img } = row;
       if (!acc[id]) {
@@ -89,7 +90,8 @@ app.get('/api/products', async (req, res) => {
 
     res.json(Object.values(products));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('商品列表查詢出錯:', error);
+    res.status(500).json({ error: "伺服器查詢失敗" });
   }
 });
 
