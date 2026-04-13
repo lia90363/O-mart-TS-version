@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import apiClient from '@/api/axios';
 import { useCartStore } from './cartStore';
 
 // 定義 Member 型別
@@ -20,7 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, password: string) {
     const cartStore = useCartStore();
     try {
-      const response = await axios.post('/login', {
+      const response = await apiClient.post('/api/login', {
         email,
         password
       });
@@ -39,7 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
         if (currentUserId) {
           // 如果本地購物車有東西，才合併
           if (cartStore.cart.length > 0) {
-            await axios.post('/cart/merge', {
+            await apiClient.post('/api/cart/merge', {
               userId: currentUserId,
               localItems: cartStore.cart
             });
@@ -69,7 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
   // 註冊
   async function register(name: string, email: string, password: string) {
     try {
-      const response = await axios.post('/register', {
+      const response = await apiClient.post('/api/register', {
         name,
         email,
         password
