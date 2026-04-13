@@ -20,7 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, password: string) {
     const cartStore = useCartStore();
     try {
-      const response = await axios.post('http://localhost:3000/api/login', {
+      const response = await axios.post('/login', {
         email,
         password
       });
@@ -39,7 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
         if (currentUserId) {
           // 如果本地購物車有東西，才合併
           if (cartStore.cart.length > 0) {
-            await axios.post('http://localhost:3000/api/cart/merge', {
+            await axios.post('/cart/merge', {
               userId: currentUserId,
               localItems: cartStore.cart
             });
@@ -69,7 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
   // 註冊
   async function register(name: string, email: string, password: string) {
     try {
-      const response = await axios.post('http://localhost:3000/api/register', {
+      const response = await axios.post('/register', {
         name,
         email,
         password

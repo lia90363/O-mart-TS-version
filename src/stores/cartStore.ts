@@ -103,7 +103,7 @@ export const useCartStore = defineStore('cart', () => {
     if (cart.value.length === 0) return; // 如果本地沒東西就不跑 API
 
     try {
-      const response = await axios.post(`http://localhost:3000/api/cart/merge`, {
+      const response = await axios.post(`/cart/merge`, {
         userId,
         localItems: cart.value // 傳送目前的 cart 陣列
       });
@@ -123,7 +123,7 @@ export const useCartStore = defineStore('cart', () => {
    */
   const fetchCartFromServer = async (userId: number) => {
     try {
-      const response = await axios.get(`http://localhost:3000/api/cart/${userId}`);
+      const response = await axios.get(`/cart/${userId}`);
       
       // 這裡非常重要：確保只把 items 陣列塞進去
       if (response.data && Array.isArray(response.data.items)) {
