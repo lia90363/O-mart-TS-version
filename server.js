@@ -5,17 +5,28 @@ import bcrypt from 'bcrypt';
 
 const saltRounds = 10; // 加密強度
 const app = express();
-app.use(cors({
-  origin: [
-    'https://o-mart-ts-version.vercel.app/', 
-    'http://localhost:5173',  
-    'http://localhost:3000'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true 
-}));
-app.use(express.json());
+const allowedOrigins = [
+  'https://o-mart-ts-version.vercel.app', 
+  'http://localhost:5173', 
+  'http://localhost:3000'
+];
 
+app.use(cors({
+  origin: function (origin, callback) {
+    // 允許開發環境與你的正式 Vercel 網址
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS 政策不允許此來源連線'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+app.use(express.json());
+app.options('*', cors());
 const PORT = process.env.PORT || 3000;
 
 const localDbUrl = 'mysql://root:MySQL123!@localhost:3306/shopping_cart_db';
@@ -48,7 +59,6 @@ app.get('/test', (req, res) => res.send('伺服器有通喔！'));
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    // 1. 先找有沒有這個 email
     const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
 
     if (rows.length === 0) {
@@ -57,20 +67,20 @@ app.post('/api/login', async (req, res) => {
 
     const user = rows[0];
 
-    // 2. 關鍵修改：比對「輸入的密碼」與「資料庫的加密密碼」
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (isMatch) {
       res.json({
         success: true,
-        user: { id: user.id, name: user.name, email: user.email }, // 不要回傳密碼
+        user: { id: user.id, name: user.name, email: user.email }, 
         token: 'fake-jwt-token'
       });
     } else {
       res.status(401).json({ success: false, message: '帳號或密碼錯誤' });
     }
   } catch (error) {
-    res.status(500).json({ error: '伺服器錯誤' });
+    console.error('Login Error:', error); 
+    res.status(500).json({ success: false, error: '伺服器錯誤' });
   }
 });
 
@@ -83,6 +93,8 @@ app.get('/api/products', async (req, res) => {
       LEFT JOIN product_variants v ON p.id = v.product_id
     `);
 
+    if (!rows || rows.length === 0) return res.json([]);
+    
     const products = rows.reduce((acc, row) => {
       const { id, title, price, description, category, variant_id, variant_name, variant_img } = row;
       if (!acc[id]) {
