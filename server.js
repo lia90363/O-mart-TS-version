@@ -26,7 +26,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.options('*', cors());
 const PORT = process.env.PORT || 3000;
 
 const localDbUrl = 'mysql://root:MySQL123!@localhost:3306/shopping_cart_db';
@@ -94,7 +93,7 @@ app.get('/api/products', async (req, res) => {
     `);
 
     if (!rows || rows.length === 0) return res.json([]);
-    
+
     const products = rows.reduce((acc, row) => {
       const { id, title, price, description, category, variant_id, variant_name, variant_img } = row;
       if (!acc[id]) {
