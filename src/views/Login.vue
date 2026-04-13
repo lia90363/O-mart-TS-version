@@ -10,8 +10,10 @@ const route = useRoute();
 const toast = useToastStore();
 
 const loginForm = reactive({
-  account: '',
-  password: ''
+  name: '', 
+  email: '',   
+  password: '',
+  confirmPassword: ''
 });
 
 const isLoading = ref(false);
@@ -23,7 +25,7 @@ const handleLogin = async () => {
   isLoading.value = true;
 
   try {
-    const res = await authStore.login(loginForm.account, loginForm.password);
+    const res = await authStore.login(loginForm.email, loginForm.password);
     
     if (res.success) {
       const redirectPath = (route.query.redirect as string) || '/';
@@ -41,28 +43,46 @@ const handleLogin = async () => {
 };
 
 const handleRegister = async () => {
-  if (isLoading.value) return; // 防止重複觸發
+  if (isLoading.value) return;
 
-  // 如果點擊時還不是註冊模式，先切換成註冊模式
-  if (!isRegisterMode.value) {
-    isRegisterMode.value = true;
+  if (!loginForm.email || !loginForm.password || !loginForm.name) {
+    toast.showToast('請填寫完整註冊資訊');
     return;
   }
 
-  // 真正的註冊邏輯
-  if (!loginForm.account || !loginForm.password) {
-    toast.showToast('請輸入完整的帳號密碼');
+  if (loginForm.password !== loginForm.confirmPassword) {
+    toast.showToast('兩次輸入的密碼不一致');
     return;
   }
-  
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(loginForm.email)) {
+    toast.showToast('Email 格式不正確');
+    return;
+  }
+
+  if (loginForm.password.length < 6) {
+    toast.showToast('密碼長度至少需要 6 位數');
+    return;
+  }
+
   isLoading.value = true;
-  await new Promise(resolve => setTimeout(resolve, 800)); 
-  
-  toast.showToast('註冊功能測試中，請使用測試帳密 \n Test/1111');
-  
-  isRegisterMode.value = false; // 成功後切換回登入模式
-  isLoading.value = false;
-  loginForm.password = ''; // 註冊完清空密碼，讓使用者重新輸入
+  try {
+    const res = await authStore.register(loginForm.name, loginForm.email, loginForm.password);
+    
+    if (res.success) {
+      toast.showToast('註冊成功！請重新登入');
+      isRegisterMode.value = false; // 切換回登入模式
+      loginForm.password = '';      // 清空密碼安全考量
+      loginForm.confirmPassword = '';  
+    } else {
+      toast.showToast(res.message || '註冊失敗');
+    }
+  } catch (err) {
+    toast.showToast('註冊失敗，請稍後再試');
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const handleSubmit = () => {
@@ -81,20 +101,35 @@ const handleSubmit = () => {
     
     <form @submit.prevent="handleSubmit">
       <input 
-        v-model="loginForm.account" 
+        v-if="isRegisterMode"
+        v-model="loginForm.name" 
         type="text" 
-        placeholder="帳號(您的英文名字)" 
+        placeholder="姓名" 
+        :disabled="isLoading" 
+        required
+      >
+      <input 
+        v-model="loginForm.email" 
+        type="email" 
+        placeholder="信箱" 
         :disabled="isLoading" 
         required
       >
       <input 
         v-model="loginForm.password" 
         type="password" 
-        placeholder="密碼(您的4碼生日)" 
+        placeholder="密碼" 
         :disabled="isLoading" 
         required
       >
-      
+      <input 
+        v-if="isRegisterMode"
+        v-model="loginForm.confirmPassword" 
+        type="password" 
+        placeholder="再次確認密碼" 
+        :disabled="isLoading" 
+        required
+      >      
       <div class="button-group">
         <!-- 登入模式：顯示「登入」按鈕(submit) 與 「切換註冊」按鈕(button) -->
         <template v-if="!isRegisterMode">
@@ -107,7 +142,7 @@ const handleSubmit = () => {
         <!-- 註冊模式：顯示「立即註冊」按鈕(submit) 與 「返回」按鈕(button) -->
         <template v-else>
           <button type="submit" :disabled="isLoading">
-            {{ isLoading ? '立即註冊' : '註冊' }}
+            {{ isLoading ? '處理中' : '立即註冊' }}
           </button>
           <button type="button" @click="isRegisterMode = false" :disabled="isLoading">返回</button>
         </template>

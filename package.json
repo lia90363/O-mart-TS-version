@@ -2,8 +2,21 @@
   "name": "shopping-cart",
   "version": "0.0.0",
   "private": true,
+  "description": "[Vue 3] [Pinia] [Vercel] [TypeScript]",
+  "homepage": "https://github.com/lia90363/O-mart-TS-version#readme",
+  "bugs": {
+    "url": "https://github.com/lia90363/O-mart-TS-version/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lia90363/O-mart-TS-version.git"
+  },
+  "license": "ISC",
+  "author": "",
   "type": "module",
+  "main": "eslint.config.js",
   "scripts": {
+    "start": "node server.js",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
@@ -12,6 +25,10 @@
   },
   "dependencies": {
     "axios": "^1.13.6",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "mysql2": "^3.20.0",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "vue": "^3.5.29",
