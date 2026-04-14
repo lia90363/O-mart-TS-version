@@ -11,7 +11,7 @@
     </RouterLink>
     <RouterLink v-if="!authStore.isLoggedIn" to="/login" class="nav-button">登入</RouterLink>
     <div v-else class="user-menu">
-      <span class="user-name">{{ authStore.user?.name }}</span>
+      <router-link v-if="authStore.isLoggedIn" to="/member" class="nav-button">會員中心</router-link>
       <button @click="handleLogout">登出</button>
     </div> 
     <div id="nav-search-target"></div>

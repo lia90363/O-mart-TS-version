@@ -25,8 +25,9 @@ const handleQtyChange = (e: Event, id: number, variantIndex: number) => {
 </script>
 
 <template>
-    <p v-if="cartStore.cart.length === 0" class="empty">購物車內還沒有商品，趕快將喜歡的商品加入購物車吧!</p>
-
+    <div v-if="cartStore.cart.length === 0" class="empty">
+        <p  class="empty-word">購物車內還沒有商品<br/>趕快將喜歡的商品加入購物車吧!</p>
+    </div>
     <ul v-else class="cart-flex">
         <li v-for="item in cartStore.cart" :key="`${item.id}-${item.selectedVariantIndex}`" class="cart-card">
             <div class="cart-img">
@@ -64,6 +65,12 @@ const handleQtyChange = (e: Event, id: number, variantIndex: number) => {
 
     <div class="cart-footer">
         <h3 class="total-price">總計金額：NT$ {{ cartStore.totalPrice.toLocaleString() }}</h3>
-        <button class="checkout-btn" @click="checkOut">前往結帳</button>
+        <button 
+            class="checkout-btn" 
+            :disabled="cartStore.totalItems === 0"
+            @click="router.push('/checkout')"
+        >
+            前往結帳
+        </button>
     </div>
 </template>

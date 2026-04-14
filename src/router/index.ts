@@ -13,8 +13,7 @@ const router = createRouter({
     {
       path: '/cart',
       name: 'cart',
-      component: () => import('../views/Cart.vue'),
-      meta: { requiresAuth: true } // 標記需要登入
+      component: () => import('../views/Cart.vue')
     },
     { 
       path: '/product/:id', 
@@ -25,6 +24,18 @@ const router = createRouter({
       path: '/login', 
       name: 'login',
       component: () => import('../views/Login.vue')
+    },
+    {
+      path: '/checkout',
+      name: 'checkout',
+      component: () => import('../views/CheckoutView.vue'),
+      meta: { requiresAuth: true } // 標記需要登入
+    },
+    {
+      path: '/member',
+      name: 'member',
+      component: () => import('../views/MemberView.vue'),
+      meta: { requiresAuth: true } // 標記需要登入
     }
   ]
 })

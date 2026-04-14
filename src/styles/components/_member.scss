@@ -1,0 +1,33 @@
+.order-card {
+  border: 1px solid #ddd;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.order-header {
+  background: #f8f8f8;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9em;
+}
+.item-row {
+  display: flex;
+  padding: 10px;
+  border-bottom: 1px dashed #eee;
+}
+.item-img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  margin-right: 15px;
+}
+.order-footer {
+  text-align: right;
+  padding: 10px;
+  background: #fffaf5;
+}
+.status-tag {
+  color: #ff6600;
+  font-weight: bold;
+}

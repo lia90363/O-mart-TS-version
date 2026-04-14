@@ -55,8 +55,8 @@ onMounted(() => {});
             </li>
         </ul>
 
-        <p v-if="!productStore.loading && productStore.filteredProducts.length === 0" class="empty">
-            找不到符合條件的商品喔！
-        </p>
+        <div v-if="!productStore.loading && productStore.filteredProducts.length === 0" class="empty">
+            <p class="empty-word">找不到符合條件的商品喔！</p>
+        </div>
     </section>
 </template>

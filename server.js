@@ -13,7 +13,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // 允許開發環境與你的正式 Vercel 網址
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -32,14 +31,14 @@ const localDbUrl = 'mysql://root:MySQL123!@localhost:3306/shopping_cart_db';
 
 console.log('當前資料庫連線網址:', process.env.MYSQL_URL ? '已偵測到雲端變數' : '未偵測到變數，使用本地設定');
 
-// 優先使用 Railway 提供給你的環境變數 MYSQL_URL，沒有的話才連本地
+// 優先使用 Railway 提供給環境變數 MYSQL_URL，沒有的話才連本地
 const dbUrl = process.env.MYSQL_URL || localDbUrl;
 
 const pool = mysql.createPool(dbUrl);
 
 console.log('連線目標:', dbUrl.split('@')[1]);
 
-// 測試連線是否成功 (這對 Debug 非常有幫助)
+// 測試連線是否成功
 pool.getConnection()
   .then(conn => {
     console.log(`--- 成功連線至資料庫：${conn.config.database} ---`);
@@ -83,7 +82,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// [GET] 取得商品列表 (修正了 productsMap 未定義的問題)
+// [GET] 取得商品列表
 app.get('/api/products', async (req, res) => {
   try {
     const [rows] = await pool.query(`
@@ -111,7 +110,7 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// [GET] 取得特定使用者的購物車 (整合為單一路由)
+// [GET] 取得特定使用者的購物車
 app.get('/api/cart/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
@@ -181,6 +180,82 @@ app.post('/api/register', async (req, res) => {
     res.json({ success: true, message: '註冊成功！' });
   } catch (error) {
     res.status(500).json({ success: false, message: '註冊失敗' });
+  }
+});
+
+// [POST] 結帳 API
+app.post('/api/checkout', async (req, res) => {
+  const { userId, totalPrice, items } = req.body;
+  
+  // 取得連線
+  const connection = await pool.getConnection();
+
+  try {
+    // --- 開始事務 (Transaction) ---
+    await connection.beginTransaction();
+
+    // 寫入訂單主表
+    const [orderResult] = await connection.query(
+      "INSERT INTO orders (user_id, total_price, status) VALUES (?, ?, 'paid')",
+      [userId, totalPrice]
+    );
+    const orderId = orderResult.insertId;
+
+    // 寫入訂單明細
+    for (const item of items) {
+      await connection.query(
+        "INSERT INTO order_items (order_id, product_id, variant_name, price_at_time, qty) VALUES (?, ?, ?, ?, ?)",
+        [orderId, item.id, item.selectedVariantName || '預設', item.price, item.qty]
+      );
+    }
+
+    // 清空該使用者的購物車
+    await connection.query("DELETE FROM cart_items WHERE user_id = ?", [userId]);
+
+    // --- 提交所有變更 ---
+    await connection.commit();
+
+    res.json({ success: true, message: '結帳成功！', orderId });
+  } catch (error) {
+    // --- 出錯了！撤銷剛才所有動作 ---
+    await connection.rollback();
+    console.error('結帳失敗，已回滾資料:', error);
+    res.status(500).json({ success: false, message: '結帳失敗，請稍後再試' });
+  } finally {
+    // 釋放連線
+    connection.release();
+  }
+});
+
+// [GET] 取得歷史訂單
+app.get('/api/orders/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    // 使用 JOIN 一次抓出訂單與商品詳情
+    const [rows] = await pool.query(`
+      SELECT o.id as order_id, o.total_price, o.created_at, o.status,
+             oi.product_id, oi.variant_name, oi.price_at_time, oi.qty,
+             p.title, p.image
+      FROM orders o
+      JOIN order_items oi ON o.id = oi.order_id
+      JOIN products p ON oi.product_id = p.id
+      WHERE o.user_id = ?
+      ORDER BY o.created_at DESC
+    `, [userId]);
+
+    // 將扁平的資料整理成「訂單包含明細」的格式
+    const orders = rows.reduce((acc, row) => {
+      const { order_id, total_price, created_at, status, ...item } = row;
+      if (!acc[order_id]) {
+        acc[order_id] = { order_id, total_price, created_at, status, items: [] };
+      }
+      acc[order_id].items.push(item);
+      return acc;
+    }, {});
+
+    res.json({ success: true, orders: Object.values(orders) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

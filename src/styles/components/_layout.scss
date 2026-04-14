@@ -84,7 +84,7 @@
     color: $primary;
     font-weight: 500;
     transition: all 0.3s ease;
-    padding: 8px 14px;
+    padding: 8px 10px;
     border-radius: 4px;
 
     &:hover {
@@ -129,11 +129,7 @@
   .user-menu {
     display: flex;
     align-items: center;
-    gap: 8px; // 縮小兩者間距
-
-    .user-name {
-      color: $primary;
-    }
+    gap: 6px; // 縮小兩者間距
 
     button {
       height: 32px; // 固定的高度讓視覺齊平
@@ -157,15 +153,21 @@
 }
 
 .empty {
-  text-align: center;
-  padding: 20px 0;
-  color: $gray;
-  margin: auto;
-  margin-bottom: 40px;
-  grid-column: 1 / -1; 
-
+  display: flex;
+  justify-content: center; 
+  align-items: center;   
+  min-height: calc(100vh - 200px);       
+  text-align: center;    
+  padding: 20px;  
+  
   .emoji {
     font-size: 40px;
     margin-bottom: 10px;
+  }
+
+  .empty-word{
+    color: $gray;
+    font-size: 1.2rem;
+    margin: 0;    
   }
 }
