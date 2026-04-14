@@ -46,42 +46,69 @@ onMounted(fetchOrders);
 const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleString();
 };
+
+// 記錄目前展開的訂單 ID，null 代表全部收合
+const expandedOrderId = ref<number | null>(null);
+
+// 切換展開狀態
+const toggleOrder = (orderId: number) => {
+  if (expandedOrderId.value === orderId) {
+    expandedOrderId.value = null; // 如果點的是已展開的，就收起來
+  } else {
+    expandedOrderId.value = orderId; // 否則展開點擊的那一筆
+  }
+};
 </script>
 
 <template>
-  <div class="member-container">
-    <h2>我的訂單紀錄</h2>
-    <hr class="orange-divider">
+    <div class="member-container">
+        <h2>我的訂單紀錄</h2>
+        <hr class="orange-divider">
 
-    <div v-if="isLoading" class="loading">讀取中...</div>
+        <div v-if="isLoading" class="loading">讀取中...</div>
 
-    <div v-else-if="orders.length === 0" class="no-orders">
-      目前還沒有任何訂單紀錄喔！
-    </div>
-
-    <div v-else class="order-list">
-      <div v-for="order in orders" :key="order.order_id" class="order-card">
-        <div class="order-header">
-          <span>訂單編號：#{{ order.order_id }}</span>
-          <span>日期：{{ formatDate(order.created_at) }}</span>
-          <span class="status-tag">{{ order.status }}</span>
+        <div v-else-if="orders.length === 0" class="empty">
+            <p class="empty-word">目前還沒有任何訂單紀錄喔！</p>
         </div>
 
-        <div class="order-items">
-          <div v-for="item in order.items" :key="item.product_id + item.variant_name" class="item-row">
-            <img :src="item.image" :alt="item.title" class="item-img">
-            <div class="item-info">
-              <p class="item-title">{{ item.title }}</p>
-              <p class="item-variant">規格：{{ item.variant_name }}</p>
-              <p class="item-price">${{ item.price_at_time }} x {{ item.qty }}</p>
+        <div v-else class="order-list">
+            <div v-for="order in orders" :key="order.order_id" class="order-card">
+                <!-- 點擊 Header 切換展開 -->
+                <div class="order-header" @click="toggleOrder(order.order_id)" :class="{ 'is-active': expandedOrderId === order.order_id }">
+                    <div class="header-main">
+                        <span class="order-num">#{{ order.order_id }}</span>
+                        <span class="order-date">{{ formatDate(order.created_at) }}</span>
+                    </div>
+                    <div class="header-side">
+                        <span class="status-tag">{{ order.status === 'paid' ? '已付款' : order.status }}</span>
+                        <!-- 旋轉箭頭圖示 -->
+                        <span class="arrow-icon" :class="{ 'rotate': expandedOrderId === order.order_id }">▼</span>
+                    </div>
+                </div>
+
+                <!-- 使用 Vue 的內建動畫組件，或者簡單用 v-show 控制 -->
+                <div v-show="expandedOrderId === order.order_id" class="order-content">
+                    <div class="order-items">
+                        <div v-for="item in order.items" :key="item.product_id + item.variant_name" class="order-row">
+                            <div class="order-pic">
+                                <router-link :to="`/product/${item.product_id}`">
+                                    <img :src="item.image" :alt="item.title" class="order-img">
+                                </router-link>
+                            </div>
+                            <div class="order-info">
+                                <span class="order-title">{{ item.title }}</span>
+                                <span class="order-variant">規格：{{ item.variant_name }}</span>
+                                <p class="order-price">${{ item.price_at_time }} x {{ item.qty }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="order-footer">
+                        <span>共 {{ order.items.length }} 件商品，實付金額：</span>
+                        <strong class="grand-total">${{ order.total_price.toLocaleString() }}</strong>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-
-        <div class="order-footer">
-          <strong>總計金額：${{ order.total_price.toLocaleString() }}</strong>
-        </div>
-      </div>
     </div>
-  </div>
 </template>
