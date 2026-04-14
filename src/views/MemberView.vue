@@ -29,9 +29,6 @@ const isLoading = ref(true);
 const fetchOrders = async () => {
   if (!authStore.user) return;
   try {
-    const res = await apiClient.get(`cart/${authStore.user.id}`); 
-    // 注意：這裡的路徑要對應你 server.js 寫的 /api/orders/:userId
-    // 如果你 server.js 寫的是 app.get('/api/orders/:userId'...)
     const response = await apiClient.get(`orders/${authStore.user.id}`);
     if (response.data.success) {
       orders.value = response.data.orders;

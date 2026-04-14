@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcrypt';
+import 'dotenv/config';
 
 const saltRounds = 10; // 加密強度
 const app = express();
@@ -118,7 +119,7 @@ app.get('/api/cart/:userId', async (req, res) => {
       SELECT 
         c.product_id as id, c.qty, c.variant_index as selectedVariantIndex,
         p.title, p.price, p.category,
-        v.name as selectedVariantName, v.image
+        v.name as selectedVariantName, pv.image
       FROM cart_items c
       JOIN products p ON c.product_id = p.id
       LEFT JOIN product_variants v ON (c.product_id = v.product_id AND c.variant_index = v.id)
@@ -233,12 +234,15 @@ app.get('/api/orders/:userId', async (req, res) => {
   try {
     // 使用 JOIN 一次抓出訂單與商品詳情
     const [rows] = await pool.query(`
-      SELECT o.id as order_id, o.total_price, o.created_at, o.status,
-             oi.product_id, oi.variant_name, oi.price_at_time, oi.qty,
-             p.title, p.image
+      SELECT 
+        o.id AS order_id, o.total_price, o.created_at, o.status,
+        oi.product_id, oi.variant_name, oi.price_at_time, oi.qty,
+        p.title, 
+        v.image
       FROM orders o
       JOIN order_items oi ON o.id = oi.order_id
       JOIN products p ON oi.product_id = p.id
+      LEFT JOIN product_variants v ON (oi.product_id = v.product_id AND oi.variant_name = v.name)
       WHERE o.user_id = ?
       ORDER BY o.created_at DESC
     `, [userId]);
