@@ -13,10 +13,10 @@
 }
 
 .order-card {
-  border: 1px solid #eee;
+  border: 1px solid $gray-soft;
   margin-bottom: 12px;
   border-radius: 12px;
-  background: #fff;
+  background: $white;
   transition: all 0.3s ease;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);

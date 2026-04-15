@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'; 
+import { ref, onMounted, onUnmounted, watch } from 'vue'; 
 import { useRoute } from 'vue-router';
 import { useProductStore } from "@/stores/productStore";
-import { useCartStore } from '@/stores/cartStore'
 
 const productStore = useProductStore();
-const cartStore = useCartStore()
 const route = useRoute();
+
+const messages = ref([
+  "🎉 歡慶開幕！全館滿 $999 免運",
+  "⚡️ 限時優惠：輸入折扣碼「Omart520」現折 $100"
+]);
+
+const currentIndex = ref(0);
+let timer: number | null = null;
 
 watch(
   () => route.query.category,
@@ -19,10 +25,28 @@ watch(
   { immediate: true }
 );
 
-onMounted(() => {}); 
+onMounted(() => {
+  timer = window.setInterval(() => { // 加上 window. 確保是指向瀏覽器的 API
+    currentIndex.value = (currentIndex.value + 1) % messages.value.length;
+  }, 4000);
+});
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
+});
 </script>
 
 <template>
+    <div class="promo-bar">
+        <div class="promo-container">
+            <!-- mode="out-in" 確保舊的離開後，新的才進來 -->
+            <transition name="slide-vertical" mode="out-in">
+                <p :key="currentIndex" class="promo-text">
+                    {{ messages[currentIndex] }}
+                </p>
+            </transition>
+        </div>
+    </div>    
     <section class="container">
         <!-- loading 時產生假項目，看起來像資料快出來了 -->
         <ul v-if="productStore.loading" class="product-grid">

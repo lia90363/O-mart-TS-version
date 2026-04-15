@@ -1,0 +1,40 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.promo-bar {
+  background-color: $primary-soft;
+  color: $black;
+  height: 40px;
+  overflow: hidden;
+}
+
+.promo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.promo-text {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* --- Vue Transition 動畫 --- */
+
+/* 進入動畫：從下面 20px 的地方開始，慢慢變透明到不透明 */
+.slide-vertical-enter-active,
+.slide-vertical-leave-active {
+  transition: all 0.5s ease;
+}
+
+.slide-vertical-enter-from {
+  transform: translateY(20px);
+  opacity: 0;
+}
+
+/* 離開動畫：往上面移動 20px 並消失 */
+.slide-vertical-leave-to {
+  transform: translateY(-20px);
+  opacity: 0;
+}

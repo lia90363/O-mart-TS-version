@@ -1,0 +1,223 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.checkout-container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  h2{ margin-top: 10px; }
+}
+
+.shipping-info {
+  background: $primary-soft; // 淡淡的橘黃色提醒感
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  text-align: center;
+  font-size: 14px;
+  min-width: 500px;
+  &.is-free {  background: $bg-blue; color: $text-dark; }
+  @include respond(sm) { min-width: 300px; }
+  .progress-bar {
+    height: 6px;
+    background: #ebeef5;
+    border-radius: 3px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    .progress-fill {
+      height: 100%;
+      background: $primary;
+      transition: width 0.3s ease;
+    }
+  }
+}
+
+.checkout-list{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-items: center;
+  border: 1px solid $gray-soft;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: $white;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  box-shadow: 0 2px 8px $gray-soft;
+  min-width: 400px;
+  gap: 10px;
+  @include respond(sm) { min-width: 340px; }
+}
+
+.checkout-item{
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  width: 100%;
+  padding: 0px 8px;
+  border-bottom: 1px solid $gray-soft;
+  &:last-child {
+    border-bottom: none;
+  }
+  .checkout-img{
+    width: 80px;
+    margin: 10px;
+    img{ width:100% }
+  }
+  .checkout-info{
+    display: grid;
+    grid-template-columns: 200px 100px 80px; 
+    width: 100%;
+    gap: 2px;
+    @include respond(sm) { 
+      display: flex;
+      flex-direction: column;
+      padding: 10px 0px;
+    }
+    .checkout-title{
+      color: $black;
+      margin-left: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .checkout-variant{ 
+      color:$gray; 
+      @include respond(sm) { margin-left: 6px; }
+    }
+    .checkout-price{ 
+      color:$primary;    
+      justify-self: end;
+      font-weight: bold;
+      @include respond(sm) { margin-left: 6px; }
+    }
+    .checkout-qty{ 
+      grid-column: 1 / -1; 
+      text-align: right;
+      font-size: 0.9rem;
+      color:$gray-dark; 
+      @include respond(sm) { margin-right: 6px; }
+    }
+  }
+}
+
+.coupon-section {
+  display: flex;
+  justify-content: space-between; /* 左右拉開 */
+  align-items: flex-start;        /* 頂部對齊 */
+  padding: 20px 0;
+  margin-bottom: 100px;
+  @include respond(sm) {     
+    flex-direction: column;
+    align-items: center;
+    gap: 20px; 
+  }
+  .coupon-input-group {
+    display: flex;
+    gap: 8px;
+    
+    input {
+      padding: 8px 12px;
+      border: 1px solid $gray;
+      border-radius: 6px;
+      width: 150px;
+    }
+    
+    .apply-btn {
+      padding: 8px 16px;
+      background-color: $gray-dark;
+      color: $white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      &:hover { opacity: 0.9; }
+    }
+  }
+
+  .price-details {
+    display: flex;
+    flex-direction: column; /* 讓明細上下排 */
+    align-items: flex-end;   /* 關鍵：讓所有明細向右對齊 */
+    gap: 8px;
+    @include respond(sm) { align-items: center; }
+    .price-row {
+      display: flex;
+      justify-content: flex-end;
+      width: 200px; /* 固定寬度可以確保冒號後的金額也對齊 */
+      
+      span:first-child {
+        color: $gray;
+      }
+      
+      .amount {
+        display: inline-block;
+        width: 80px;  /* 給金額一個固定寬度，數字就會更整齊 */
+        text-align: right;
+        font-weight: 600;
+      }
+
+      &.discount {
+        color: $primary; // 折扣用顯眼的顏色
+      }
+    }
+  }
+}
+
+.checkout-footer {
+  display: flex;
+  position: sticky;
+  background-color: $white;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 30px;
+  padding: 20px 5%;
+  box-sizing: border-box;
+  
+  position: fixed;
+  left: 0;   
+  right: 0;
+  bottom: 0;
+
+  box-shadow: 0 -4px 12px $gray;  
+  z-index: 999;
+
+  .checkout-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.2rem;
+    font-weight: bold;
+    .price-highlight { color: $primary; }
+  }
+  .confirm-btn{
+    background-color: $primary;
+    color: $white; 
+    border: none;
+    padding: 12px 32px;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 6px; 
+    cursor: pointer;
+    box-shadow: 0 4px 6px $gray; 
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+        background-color: $primary;
+        color: $white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba($primary, 0.3);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0); 
+    }
+
+    &:disabled {
+        background-color: $gray; 
+        color: $gray-dark;     
+        cursor: not-allowed;  
+        transform: none;     
+        box-shadow: none;       
+        opacity: 0.8;            
+    }
+  }
+}
