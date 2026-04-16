@@ -158,16 +158,12 @@
 
     .total-price {
         display: flex;
-        align-items: baseline;
-        gap: 10px;
-        color: $black;
-        font-weight: 500;
-
-        span {
-            font-size: 24px;
-            color: $primary;
-            font-weight: 700;
-        }
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1.2rem;
+        font-weight: bold;
+        .price-highlight { color: $primary; }
+        .pending-shipping { color: $gray; font-size: 0.9rem;  margin-left: 6px;}
     }
 
     .checkout-btn{

@@ -37,7 +37,16 @@ const router = createRouter({
       component: () => import('../views/MemberView.vue'),
       meta: { requiresAuth: true } // 標記需要登入
     }
-  ]
+  ],
+  scrollBehavior(to, from, savedPosition) {
+    // 有 savedPosition (代表點擊返回或前進按鈕)
+    if (savedPosition) {
+      return savedPosition;
+    } else {
+      // 正常的頁面切換則捲動到頂部
+      return { top: 0 };
+    }
+  },
 })
 
 router.beforeEach((to) => {

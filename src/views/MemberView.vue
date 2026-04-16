@@ -105,7 +105,7 @@ const toggleOrder = (orderId: number) => {
 
                     <div class="order-footer">
                         <span>共 {{ order.items.length }} 件商品，實付金額：</span>
-                        <strong class="grand-total">${{ order.total_price.toLocaleString() }}</strong>
+                        <strong class="grand-total">${{ order.total_price }}</strong>
                     </div>
                 </div>
             </div>

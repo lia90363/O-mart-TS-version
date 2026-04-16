@@ -90,8 +90,8 @@ watch(() => route.params.id, () => {
 
 <template>
     <div class="product-detail">
-        <div v-if="productStore.loading">載入中...</div>
-        <div v-else-if="!item">找不到商品</div>
+        <div v-if="productStore.loading" class="empty">載入中...</div>
+        <div v-else-if="!item" class="empty">找不到商品</div>
         <div v-else class="detail-container">
             <!-- 左側：圖片區 -->
             <div class="detail-image">

@@ -46,7 +46,7 @@ const handleQtyChange = (e: Event, id: number, variantIndex: number) => {
                     規格：{{ item.selectedVariantName }}
                 </small>
 
-                <div class="item-subtotal">NT$ {{ (item.price * item.qty).toLocaleString() }}</div>
+                <div class="item-subtotal">NT$ {{ (item.price * item.qty) }}</div>
 
                 <div class="item-qty">
                     <button @click="cartStore.updateQty(item.id, item.selectedVariantIndex, -1)" class="qty-btn">-</button>
@@ -64,7 +64,11 @@ const handleQtyChange = (e: Event, id: number, variantIndex: number) => {
     </ul>
 
     <div class="cart-footer">
-        <h3 class="total-price">總計金額：NT$ {{ cartStore.totalPrice.toLocaleString() }}</h3>
+        <div class="total-price">
+            <span>總額：</span>
+            <span class="price-highlight">$ {{ cartStore.totalPrice }}</span>
+            <span class="pending-shipping">不含運費</span>
+        </div>
         <button 
             class="checkout-btn" 
             :disabled="cartStore.totalItems === 0"
