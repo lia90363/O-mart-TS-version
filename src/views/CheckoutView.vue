@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'vue-router';
 import { useToastStore } from '@/stores/useToastStore';
 import apiClient from '@/api/axios';
+import { watchEffect } from 'vue';
 
 const cartStore = useCartStore();
 const authStore = useAuthStore();
@@ -13,6 +14,7 @@ const toast = useToastStore();
 const FREE_SHIPPING_THRESHOLD = 999;
 const couponCode = ref('');
 const discount = ref(0);
+const isLoading = ref(false);
 
 const amountToFreeShipping = computed(() => {
   const diff = FREE_SHIPPING_THRESHOLD - cartStore.totalPrice;
@@ -56,12 +58,35 @@ const shippingData = reactive({
 });
 
 const handleConfirmCheckout = async () => {
-  if (!authStore.user) return;
+  console.log('準備結帳，資料如下:', {
+    shippingMethod: selectedMethodId.value,
+    shippingDetail: shippingData 
+  });
+  if (cartStore.cart.length === 0) return;
+  if (!authStore.user) return toast.showToast('請先登入');
+  if (isLoading.value) return;
+
+  if (selectedMethodId.value === 'home' && !shippingData.receiver) {
+    return toast.showToast('請填寫收件人姓名');
+  }  
 
   if (selectedMethodId.value === 'home' && !shippingData.address) {
     return toast.showToast('請填寫配送地址');
   }  
-  
+
+  if (selectedMethodId.value === 'store' && !shippingData.storeName) {
+    return toast.showToast('請選擇取件門市');
+  } 
+
+  if (selectedMethodId.value === 'store' && !shippingData.phone) {
+    return toast.showToast('請填寫手機號碼');
+  } 
+
+  if (selectedMethodId.value === 'pickup' && !shippingData.pickupDate) {
+    return toast.showToast('請選擇取貨時間');
+  } 
+
+  isLoading.value = true;
   try {
     const response = await apiClient.post('checkout', {
       userId: authStore.user.id,
@@ -74,7 +99,7 @@ const handleConfirmCheckout = async () => {
     if (response.data.success) {
       toast.showToast('訂單已成立！感謝您的購買');
       cartStore.clearCart(); // 清空本地購物車
-      router.push('/member'); // 跳轉到會員中心看訂單
+      router.replace('/member'); // 跳轉到會員中心看訂單，使用replace無法上一頁回下單頁面
     }
   } catch (error) {
     toast.showToast('結帳失敗，請稍後再試');
@@ -83,6 +108,14 @@ const handleConfirmCheckout = async () => {
 
 const finalTotal = computed(() => {
   return cartStore.totalPrice + currentShippingFee.value - discount.value;
+});
+
+watchEffect(() => { // 立即執行使用 watchEffect
+  const cartData = cartStore.cart; 
+  
+  if (!cartData || cartData.length === 0) {
+    router.replace('/member');
+  }
 });
 </script>
 
@@ -118,7 +151,7 @@ const finalTotal = computed(() => {
     </div>
 
     <hr class="full-divider">
-    
+
     <!-- 運送方式選擇 -->
     <div class="shipping-options">
       <label class="section-title">選擇運送方式</label>
@@ -193,7 +226,14 @@ const finalTotal = computed(() => {
         <span>總額：</span>
         <span class="price-highlight">$ {{ finalTotal }}</span>
       </div>
-      <button class="confirm-btn" @click="handleConfirmCheckout">確認購買</button>
+      <button 
+        class="confirm-btn" 
+        @click="handleConfirmCheckout"
+        :disabled="isLoading || cartStore.cart.length === 0"
+      >
+        <span v-if="isLoading">處理中...</span>
+        <span v-else>確認下單</span>
+      </button>
     </div>
   </div>
 </template>

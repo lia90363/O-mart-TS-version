@@ -186,44 +186,75 @@ app.post('/api/register', async (req, res) => {
 
 // [POST] 結帳 API
 app.post('/api/checkout', async (req, res) => {
-  const { userId, totalPrice, items } = req.body;
-  
-  // 取得連線
+  const { userId, shippingMethod, shippingDetail } = req.body;
   const connection = await pool.getConnection();
 
   try {
-    // --- 開始事務 (Transaction) ---
+    // 取得購物車資料（重新計算價格）
+    const [dbCartItems] = await connection.query(`
+      SELECT c.product_id, c.qty, p.price, v.name as variant_name
+      FROM cart_items c
+      JOIN products p ON c.product_id = p.id
+      LEFT JOIN product_variants v ON (c.product_id = v.product_id AND c.variant_index = v.id)
+      WHERE c.user_id = ?
+    `, [userId]);
+
+    if (dbCartItems.length === 0) {
+      return res.status(400).json({ success: false, message: '購物車已空，無法下單' });
+    }
+
+    // 後端計算商品小計
+    const itemsPrice = dbCartItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+    // 後端判斷運費 (與前端邏輯同步)
+    let shippingFee = 0;
+    if (itemsPrice < 999) { // 免運門檻
+      if (shippingMethod === 'home') shippingFee = 100;
+      else if (shippingMethod === 'store') shippingFee = 60;
+      else if (shippingMethod === 'pickup') shippingFee = 0;
+    }
+
+    const finalTotal = itemsPrice + shippingFee;
+
+    // --- 開始事務 ---
     await connection.beginTransaction();
 
-    // 寫入訂單主表
+    // 寫入訂單主表 (包含收件資訊)
     const [orderResult] = await connection.query(
-      "INSERT INTO orders (user_id, total_price, status) VALUES (?, ?, 'paid')",
-      [userId, totalPrice]
+      `INSERT INTO orders 
+      (user_id, total_price, status, shipping_method, receiver_name, shipping_address, store_name, phone) 
+      VALUES (?, ?, 'paid', ?, ?, ?, ?, ?)`,
+      [
+        userId, 
+        finalTotal, 
+        shippingMethod,
+        shippingDetail?.receiver || '', // 加個問號跟預設值
+        shippingDetail?.address || '',
+        shippingDetail?.storeName || '',
+        shippingDetail?.phone || ''
+      ]
     );
     const orderId = orderResult.insertId;
 
     // 寫入訂單明細
-    for (const item of items) {
+    for (const item of dbCartItems) {
       await connection.query(
         "INSERT INTO order_items (order_id, product_id, variant_name, price_at_time, qty) VALUES (?, ?, ?, ?, ?)",
-        [orderId, item.id, item.selectedVariantName || '預設', item.price, item.qty]
+        [orderId, item.product_id, item.variant_name || '預設', item.price, item.qty]
       );
     }
 
-    // 清空該使用者的購物車
+    // 清空購物車
     await connection.query("DELETE FROM cart_items WHERE user_id = ?", [userId]);
 
-    // --- 提交所有變更 ---
     await connection.commit();
+    res.json({ success: true, orderId });
 
-    res.json({ success: true, message: '結帳成功！', orderId });
   } catch (error) {
-    // --- 出錯了！撤銷剛才所有動作 ---
-    await connection.rollback();
-    console.error('結帳失敗，已回滾資料:', error);
-    res.status(500).json({ success: false, message: '結帳失敗，請稍後再試' });
+    if (connection) await connection.rollback();
+    console.error('Checkout Error:', error);
+    res.status(500).json({ success: false, message: '伺服器錯誤' });
   } finally {
-    // 釋放連線
     connection.release();
   }
 });
@@ -232,10 +263,10 @@ app.post('/api/checkout', async (req, res) => {
 app.get('/api/orders/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
-    // 使用 JOIN 一次抓出訂單與商品詳情
     const [rows] = await pool.query(`
       SELECT 
         o.id AS order_id, o.total_price, o.created_at, o.status,
+        o.shipping_method, o.receiver_name, o.shipping_address, o.store_name, o.phone,
         oi.product_id, oi.variant_name, oi.price_at_time, oi.qty,
         p.title, 
         v.image
@@ -247,19 +278,40 @@ app.get('/api/orders/:userId', async (req, res) => {
       ORDER BY o.created_at DESC
     `, [userId]);
 
-    // 將扁平的資料整理成「訂單包含明細」的格式
+    // 格式化資料：將扁平的 SQL 結果轉為巢狀結構
     const orders = rows.reduce((acc, row) => {
-      const { order_id, total_price, created_at, status, ...item } = row;
+      const { 
+        order_id, total_price, created_at, status, 
+        shipping_method, receiver_name, shipping_address, store_name, phone,
+        ...item 
+      } = row;
+
       if (!acc[order_id]) {
-        acc[order_id] = { order_id, total_price, created_at, status, items: [] };
+        acc[order_id] = {
+          order_id,
+          total_price,
+          created_at,
+          status,
+          // 這裡的 Key 名稱要跟前端對上！
+          shipping_info: {
+            method: shipping_method,   // 這裡要叫 method
+            receiver: receiver_name,
+            address: shipping_address,
+            store: store_name,
+            phone: phone
+          },
+          items: []
+        };
       }
+      
       acc[order_id].items.push(item);
       return acc;
     }, {});
 
     res.json({ success: true, orders: Object.values(orders) });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Fetch Orders Error:', error);
+    res.status(500).json({ success: false, message: '無法取得訂單資料' });
   }
 });
 

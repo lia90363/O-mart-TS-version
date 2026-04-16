@@ -92,6 +92,26 @@
   }
 }
 
+.shipping-detail-box {
+    margin-top: 15px;
+    padding: 12px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.section-label {
+    font-weight: bold;
+    color: #e67e22; /* 橘色點綴 */
+    margin-bottom: 5px;
+    border-bottom: 1px dashed #ddd;
+}
+
+.detail-content p {
+    margin: 4px 0;
+}
+
 .order-info{
   margin: 10px;
   padding: 2px;
