@@ -205,7 +205,10 @@ app.post('/api/checkout', async (req, res) => {
     `, [userId]);
 
     if (dbCartItems.length === 0) {
-      return res.status(400).json({ success: false, message: '購物車已空，無法下單' });
+      return res.status(400).json({ 
+        success: false, 
+        message: `購物車為空，查無 userId 為 ${userId} 的商品` // 這樣報錯會很清楚
+      });
     }
 
     // 後端計算商品小計
@@ -283,6 +286,59 @@ app.get('/api/cart/:userId', async (req, res) => {
   } catch (error) {
     console.error('Fetch Cart Error:', error);
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// [GET] 取得歷史訂單 - 這一段是你現在缺少的！
+app.get('/api/orders/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        o.id AS order_id, o.total_price, o.created_at, o.status,
+        o.shipping_method, o.receiver_name, o.shipping_address, o.store_name, o.phone,
+        oi.product_id, oi.variant_name, oi.price_at_time, oi.qty,
+        p.title, 
+        v.image
+      FROM orders o
+      JOIN order_items oi ON o.id = oi.order_id
+      JOIN products p ON oi.product_id = p.id
+      LEFT JOIN product_variants v ON (oi.product_id = v.product_id AND oi.variant_name = v.name)
+      WHERE o.user_id = ?
+      ORDER BY o.created_at DESC
+    `, [userId]);
+
+    const orders = rows.reduce((acc, row) => {
+      const { 
+        order_id, total_price, created_at, status, 
+        shipping_method, receiver_name, shipping_address, store_name, phone,
+        ...item 
+      } = row;
+
+      if (!acc[order_id]) {
+        acc[order_id] = {
+          order_id,
+          total_price,
+          created_at,
+          status,
+          shipping_info: {
+            method: shipping_method,
+            receiver: receiver_name,
+            address: shipping_address,
+            store: store_name,
+            phone: phone
+          },
+          items: []
+        };
+      }
+      acc[order_id].items.push(item);
+      return acc;
+    }, {});
+
+    res.json({ success: true, orders: Object.values(orders) });
+  } catch (error) {
+    console.error('Fetch Orders Error:', error);
+    res.status(500).json({ success: false, message: '無法取得訂單資料' });
   }
 });
 

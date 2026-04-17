@@ -58,10 +58,14 @@ const shippingData = reactive({
 });
 
 const handleConfirmCheckout = async () => {
-  console.log('準備結帳，資料如下:', {
+  const payload = {
+    userId: authStore.user?.id, // 重點：檢查這是不是 undefined
+    totalPrice: finalTotal.value,
     shippingMethod: selectedMethodId.value,
     shippingDetail: shippingData 
-  });
+  };
+  console.log('🚀 即將發送結帳請求，封包內容:', payload);
+  
   if (cartStore.cart.length === 0) return;
   if (!authStore.user) return toast.showToast('請先登入');
   if (isLoading.value) return;
