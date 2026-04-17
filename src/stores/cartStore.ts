@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useToastStore } from './useToastStore'
+import { useAuthStore } from './authStore'
 import apiClient from '@/api/axios'
 
 export interface Product {
@@ -13,6 +14,7 @@ export interface Product {
   variants?: {
     name: string;
     image?: string;
+    id: number;
   }[];
 }
 
@@ -29,13 +31,14 @@ export const useCartStore = defineStore('cart', () => {
   // --- 原有功能區 ---
 
   // 加入購物車
-  const addToCart = (
+  const addToCart = async (
     product: Product, 
     qty: number | string = 1,
     variantIndex: number = 0, 
-    variantName?: string
+    variantName?: string,
   ) => {
     const numQty = Math.max(1, Math.floor(Number(qty) || 1));
+    const authStore = useAuthStore();
 
     const index = cart.value.findIndex((item) => 
       item.id === product.id && 
@@ -53,6 +56,23 @@ export const useCartStore = defineStore('cart', () => {
     } else {
       const item = cart.value[index];
       if (item) item.qty += numQty;
+    }
+
+    if (authStore.user) {
+      try {
+        // 呼叫後端的合併購物車 API 或新增 API
+        await apiClient.post('cart/merge', {
+          userId: authStore.user.id,
+          localItems: [{
+            id: product.id,
+            qty: numQty,
+            selectedVariantIndex: product.variants?.[variantIndex]?.id || null
+          }]
+        });
+        console.log('後端同步成功');
+      } catch (error) {
+        console.error('後端同步失敗:', error);
+      }
     }
 
     const variantLabel = variantName ? ` (${variantName})` : '';

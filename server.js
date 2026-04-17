@@ -186,7 +186,7 @@ app.post('/api/register', async (req, res) => {
 
 // [POST] 結帳 API
 app.post('/api/checkout', async (req, res) => {
-  const { userId, shippingMethod, shippingDetail } = req.body;
+  const { userId, shippingMethod, shippingDetail, couponCode } = req.body;
 
   console.log('--- 結帳請求資料 ---');
   console.log('shippingMethod:', shippingMethod);
@@ -222,7 +222,12 @@ app.post('/api/checkout', async (req, res) => {
       else if (shippingMethod === 'pickup') shippingFee = 0;
     }
 
-    const finalTotal = itemsPrice + shippingFee;
+    let discount = 0;
+    if (couponCode === 'Omart520') {
+      discount = 100; // 統一由後端決定扣多少
+    }
+
+    const finalTotal = itemsPrice + shippingFee - discount;
 
     // --- 開始事務 ---
     await connection.beginTransaction();
@@ -236,7 +241,7 @@ app.post('/api/checkout', async (req, res) => {
         userId, 
         finalTotal, 
         shippingMethod,
-        shippingDetail?.receiver || '未填寫', // 加個問號跟預設值
+        shippingDetail?.receiver || '未填寫',
         shippingDetail?.address || '未填寫',
         shippingDetail?.storeName || '未填寫',
         shippingDetail?.phone || '未填寫'
@@ -248,7 +253,7 @@ app.post('/api/checkout', async (req, res) => {
     for (const item of dbCartItems) {
       await connection.query(
         "INSERT INTO order_items (order_id, product_id, variant_name, price_at_time, qty) VALUES (?, ?, ?, ?, ?)",
-        [orderId, item.product_id, item.variant_name || '預設', item.price, item.qty]
+        [orderId, item.product_id, item.variant_name || '標準款', item.price, item.qty]
       );
     }
 
@@ -289,7 +294,7 @@ app.get('/api/cart/:userId', async (req, res) => {
   }
 });
 
-// [GET] 取得歷史訂單 - 這一段是你現在缺少的！
+// [GET] 取得歷史訂單
 app.get('/api/orders/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
@@ -298,8 +303,7 @@ app.get('/api/orders/:userId', async (req, res) => {
         o.id AS order_id, o.total_price, o.created_at, o.status,
         o.shipping_method, o.receiver_name, o.shipping_address, o.store_name, o.phone,
         oi.product_id, oi.variant_name, oi.price_at_time, oi.qty,
-        p.title, 
-        v.image
+        p.title, v.image
       FROM orders o
       JOIN order_items oi ON o.id = oi.order_id
       JOIN products p ON oi.product_id = p.id
