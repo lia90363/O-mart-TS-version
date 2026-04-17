@@ -125,18 +125,15 @@ export const useCartStore = defineStore('cart', () => {
     try {
       const response = await apiClient.get(`cart/${userId}`);
       
-      // 這裡非常重要：確保只把 items 陣列塞進去
-      if (response.data && Array.isArray(response.data.items)) {
+      if (response.data && response.data.success && Array.isArray(response.data.items)) {
         cart.value = response.data.items;
-      } else if (Array.isArray(response.data)) {
-        cart.value = response.data;
       } else {
-        console.warn('API 回傳格式異常，已自動重設為空陣列', response.data);
-        cart.value = []; 
+        // 如果格式不對，至少不要讓 cart 變成 undefined
+        console.warn('API 回傳資料不符合預期');
       }
     } catch (error) {
       console.error('抓取購物車失敗:', error);
-      cart.value = []; // 出錯也要維持陣列
+      // 這裡可以選擇不動作，保留本地現有的內容，或是提示使用者
     }
   };
 

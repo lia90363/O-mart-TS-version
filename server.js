@@ -119,7 +119,7 @@ app.get('/api/cart/:userId', async (req, res) => {
       SELECT 
         c.product_id as id, c.qty, c.variant_index as selectedVariantIndex,
         p.title, p.price, p.category,
-        v.name as selectedVariantName, pv.image
+        v.name as selectedVariantName, v.image
       FROM cart_items c
       JOIN products p ON c.product_id = p.id
       LEFT JOIN product_variants v ON (c.product_id = v.product_id AND c.variant_index = v.id)
@@ -187,6 +187,11 @@ app.post('/api/register', async (req, res) => {
 // [POST] 結帳 API
 app.post('/api/checkout', async (req, res) => {
   const { userId, shippingMethod, shippingDetail } = req.body;
+
+  console.log('--- 結帳請求資料 ---');
+  console.log('shippingMethod:', shippingMethod);
+  console.log('shippingDetail:', JSON.stringify(shippingDetail));
+
   const connection = await pool.getConnection();
 
   try {
@@ -228,10 +233,10 @@ app.post('/api/checkout', async (req, res) => {
         userId, 
         finalTotal, 
         shippingMethod,
-        shippingDetail?.receiver || '', // 加個問號跟預設值
-        shippingDetail?.address || '',
-        shippingDetail?.storeName || '',
-        shippingDetail?.phone || ''
+        shippingDetail?.receiver || '未填寫', // 加個問號跟預設值
+        shippingDetail?.address || '未填寫',
+        shippingDetail?.storeName || '未填寫',
+        shippingDetail?.phone || '未填寫'
       ]
     );
     const orderId = orderResult.insertId;
@@ -259,59 +264,25 @@ app.post('/api/checkout', async (req, res) => {
   }
 });
 
-// [GET] 取得歷史訂單
-app.get('/api/orders/:userId', async (req, res) => {
+app.get('/api/cart/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
     const [rows] = await pool.query(`
       SELECT 
-        o.id AS order_id, o.total_price, o.created_at, o.status,
-        o.shipping_method, o.receiver_name, o.shipping_address, o.store_name, o.phone,
-        oi.product_id, oi.variant_name, oi.price_at_time, oi.qty,
-        p.title, 
-        v.image
-      FROM orders o
-      JOIN order_items oi ON o.id = oi.order_id
-      JOIN products p ON oi.product_id = p.id
-      LEFT JOIN product_variants v ON (oi.product_id = v.product_id AND oi.variant_name = v.name)
-      WHERE o.user_id = ?
-      ORDER BY o.created_at DESC
+        c.product_id as id, c.qty, c.variant_index as selectedVariantIndex,
+        p.title, p.price, p.category,
+        v.name as selectedVariantName, v.image
+      FROM cart_items c
+      JOIN products p ON c.product_id = p.id
+      LEFT JOIN product_variants v ON (c.product_id = v.product_id AND c.variant_index = v.id)
+      WHERE c.user_id = ?
     `, [userId]);
 
-    // 格式化資料：將扁平的 SQL 結果轉為巢狀結構
-    const orders = rows.reduce((acc, row) => {
-      const { 
-        order_id, total_price, created_at, status, 
-        shipping_method, receiver_name, shipping_address, store_name, phone,
-        ...item 
-      } = row;
-
-      if (!acc[order_id]) {
-        acc[order_id] = {
-          order_id,
-          total_price,
-          created_at,
-          status,
-          // 這裡的 Key 名稱要跟前端對上！
-          shipping_info: {
-            method: shipping_method,   // 這裡要叫 method
-            receiver: receiver_name,
-            address: shipping_address,
-            store: store_name,
-            phone: phone
-          },
-          items: []
-        };
-      }
-      
-      acc[order_id].items.push(item);
-      return acc;
-    }, {});
-
-    res.json({ success: true, orders: Object.values(orders) });
+    // 確保回傳 success: true 且 items 欄位名稱與前端一致
+    res.json({ success: true, items: rows });
   } catch (error) {
-    console.error('Fetch Orders Error:', error);
-    res.status(500).json({ success: false, message: '無法取得訂單資料' });
+    console.error('Fetch Cart Error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
