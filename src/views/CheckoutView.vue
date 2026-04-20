@@ -147,7 +147,7 @@ watchEffect(() => { // 立即執行使用 watchEffect
     <div class="checkout-list">
       <div v-for="item in cartStore.cart" :key="item.id + item.selectedVariantIndex" class="checkout-item">
         <div class="checkout-img">
-          <img :src="item.variants?.[item.selectedVariantIndex]?.image" :alt="item.title" loading="lazy">
+          <img :src="item.image" :alt="item.title" loading="lazy">
         </div>
         <div class="checkout-info">
           <span class="checkout-title">{{ item.title }}</span>

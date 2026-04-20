@@ -10,6 +10,8 @@ export interface Product {
   price: number;
   description: string;
   category: string;
+  selectedVariantIndex: number;
+  image: string; 
   variants: {
     name: string;
     image: string;

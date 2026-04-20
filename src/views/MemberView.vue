@@ -113,7 +113,7 @@ const toggleOrder = (orderId: number) => {
               <div v-for="item in order.items" :key="item.product_id + item.variant_name" class="order-row">
                 <div class="order-pic">
                     <router-link :to="`/product/${item.product_id}`">
-                        <img :src="item.image" :alt="item.title" class="order-img">
+                      <img :src="item.image" :alt="item.title" class="order-img">
                     </router-link>
                 </div>
                 <div class="order-info">

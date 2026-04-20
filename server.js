@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import 'dotenv/config';
 
 const saltRounds = 10; // 加密強度 (bcrypt 雜湊次數)
@@ -47,6 +48,27 @@ pool.getConnection()
     console.error('--- 資料庫連線失敗 ---', err.message);
   });
 
+const authenticateToken = (req, res, next) => {
+  // 從 Header 的 Authorization 欄位取得 Token
+  // 格式通常是: Bearer <token>
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: '請先登入' });
+  }
+
+  // 驗證 Token 是否正確或過期
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ success: false, message: '憑證無效或已過期' });
+    }
+    // 驗證成功，將解開的資料（如 userId）掛在 req 上，讓後面的程式碼可以用
+    req.user = user;
+    next(); // 准許過關，繼續執行下一個動作
+  });
+};
+
 // [POST] 登入驗證
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
@@ -61,10 +83,17 @@ app.post('/api/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password); // 安全比對加密密碼
 
     if (isMatch) {
+      // 將 user id 包進 token 裡，並設定 24 小時後過期
+      const token = jwt.sign(
+        { userId: user.id }, 
+        process.env.JWT_SECRET, 
+        { expiresIn: '24h' }
+      );
+
       res.json({
         success: true,
         user: { id: user.id, name: user.name, email: user.email }, 
-        token: 'fake-jwt-token'  // 目前先給予假 Token，之後可改用 JWT 簽發
+        token: token
       });
     } else {
       res.status(401).json({ success: false, message: '帳號或密碼錯誤' });
@@ -112,10 +141,10 @@ app.get('/api/cart/:userId', async (req, res) => {
       SELECT 
         c.product_id as id, c.qty, c.variant_index as selectedVariantIndex,
         p.title, p.price, p.category,
-        v.name as selectedVariantName, v.image
+        v.name as selectedVariantName, v.image as image,
       FROM cart_items c
       JOIN products p ON c.product_id = p.id
-      LEFT JOIN product_variants v ON (c.product_id = v.product_id AND c.variant_index = v.id)
+      LEFT JOIN product_variants v ON c.variant_index = v.id
       WHERE c.user_id = ?
     `, [userId]);
 
@@ -178,9 +207,9 @@ app.post('/api/register', async (req, res) => {
 });
 
 // [POST] 結帳 API
-app.post('/api/checkout', async (req, res) => {
-  const { userId, shippingMethod, shippingDetail, couponCode } = req.body;
-
+app.post('/api/checkout', authenticateToken, async (req, res) => {
+  const userId = req.user.userId; 
+  const { shippingMethod, shippingDetail, couponCode } = req.body;
   const connection = await pool.getConnection();
 
   try {
@@ -279,8 +308,14 @@ app.get('/api/cart/:userId', async (req, res) => {
 });
 
 // [GET] 取得歷史訂單
-app.get('/api/orders/:userId', async (req, res) => {
+app.get('/api/orders/:userId', authenticateToken, async (req, res) => {
   const { userId } = req.params;
+
+  // 安全檢查：防止 A 使用者輸入 B 的 ID 來看別人的訂單
+  if (parseInt(userId) !== req.user.userId) {
+    return res.status(403).json({ success: false, message: '權限不足' });
+  }
+
   try {
     const [rows] = await pool.query(`
       SELECT 
