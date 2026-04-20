@@ -4,8 +4,10 @@ import mysql from 'mysql2/promise';
 import bcrypt from 'bcrypt';
 import 'dotenv/config';
 
-const saltRounds = 10; // 加密強度
+const saltRounds = 10; // 加密強度 (bcrypt 雜湊次數)
 const app = express();
+
+// 設定允許連線的前端來源 (包含 Vercel 雲端與本地端)
 const allowedOrigins = [
   'https://o-mart-ts-version.vercel.app', 
   'http://localhost:5173', 
@@ -14,6 +16,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
+    // 允許沒有來源的請求 (例如 Postman) 或在白名單內的來源
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -25,34 +28,24 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json());
+app.use(express.json());  // 解析 JSON 格式的請求主體
 const PORT = process.env.PORT || 3000;
 
+// 資料庫連線配置
 const localDbUrl = 'mysql://root:MySQL123!@localhost:3306/shopping_cart_db';
-
-console.log('當前資料庫連線網址:', process.env.MYSQL_URL ? '已偵測到雲端變數' : '未偵測到變數，使用本地設定');
-
-// 優先使用 Railway 提供給環境變數 MYSQL_URL，沒有的話才連本地
+// 優先使用 Railway 提供給環境變數 MYSQL_URL，否則使用本地連線
 const dbUrl = process.env.MYSQL_URL || localDbUrl;
+const pool = mysql.createPool(dbUrl); // 建立連線池提高效能
 
-const pool = mysql.createPool(dbUrl);
-
-console.log('連線目標:', dbUrl.split('@')[1]);
-
-// 測試連線是否成功
+// 測試資料庫連線
 pool.getConnection()
   .then(conn => {
     console.log(`--- 成功連線至資料庫：${conn.config.database} ---`);
     conn.release();
   })
   .catch(err => {
-    console.error('--- 資料庫連線失敗 ---');
-    console.error('錯誤訊息:', err.message);
+    console.error('--- 資料庫連線失敗 ---', err.message);
   });
-
-// [GET] 測試路徑
-app.get('/', (req, res) => res.send('這是購物車後端首頁'));
-app.get('/test', (req, res) => res.send('伺服器有通喔！'));
 
 // [POST] 登入驗證
 app.post('/api/login', async (req, res) => {
@@ -65,14 +58,13 @@ app.post('/api/login', async (req, res) => {
     }
 
     const user = rows[0];
-
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password); // 安全比對加密密碼
 
     if (isMatch) {
       res.json({
         success: true,
         user: { id: user.id, name: user.name, email: user.email }, 
-        token: 'fake-jwt-token'
+        token: 'fake-jwt-token'  // 目前先給予假 Token，之後可改用 JWT 簽發
       });
     } else {
       res.status(401).json({ success: false, message: '帳號或密碼錯誤' });
@@ -94,6 +86,7 @@ app.get('/api/products', async (req, res) => {
 
     if (!rows || rows.length === 0) return res.json([]);
 
+    // 將資料庫的一列一列資料整理成「一個商品包多個規格」的格式
     const products = rows.reduce((acc, row) => {
       const { id, title, price, description, category, variant_id, variant_name, variant_img } = row;
       if (!acc[id]) {
@@ -188,14 +181,10 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/checkout', async (req, res) => {
   const { userId, shippingMethod, shippingDetail, couponCode } = req.body;
 
-  console.log('--- 結帳請求資料 ---');
-  console.log('shippingMethod:', shippingMethod);
-  console.log('shippingDetail:', JSON.stringify(shippingDetail));
-
   const connection = await pool.getConnection();
 
   try {
-    // 取得購物車資料（重新計算價格）
+    // 重新從資料庫撈取商品確保價格正確
     const [dbCartItems] = await connection.query(`
       SELECT c.product_id, c.qty, p.price, v.name as variant_name
       FROM cart_items c
@@ -207,32 +196,28 @@ app.post('/api/checkout', async (req, res) => {
     if (dbCartItems.length === 0) {
       return res.status(400).json({ 
         success: false, 
-        message: `購物車為空，查無 userId 為 ${userId} 的商品` // 這樣報錯會很清楚
+        message: `購物車為空，查無 userId 為 ${userId} 的商品`
       });
     }
 
-    // 後端計算商品小計
+    // 後端二度確認運費與折扣 (防止前端修改資料)
     const itemsPrice = dbCartItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
-
-    // 後端判斷運費 (與前端邏輯同步)
     let shippingFee = 0;
     if (itemsPrice < 999) { // 免運門檻
       if (shippingMethod === 'home') shippingFee = 100;
       else if (shippingMethod === 'store') shippingFee = 60;
       else if (shippingMethod === 'pickup') shippingFee = 0;
     }
-
     let discount = 0;
     if (couponCode === 'Omart520') {
       discount = 100; // 統一由後端決定扣多少
     }
-
     const finalTotal = itemsPrice + shippingFee - discount;
 
-    // --- 開始事務 ---
+    // 開始事務
     await connection.beginTransaction();
 
-    // 寫入訂單主表 (包含收件資訊)
+    // 寫入訂單主表
     const [orderResult] = await connection.query(
       `INSERT INTO orders 
       (user_id, total_price, status, shipping_method, receiver_name, shipping_address, store_name, phone) 
@@ -265,7 +250,6 @@ app.post('/api/checkout', async (req, res) => {
 
   } catch (error) {
     if (connection) await connection.rollback();
-    console.error('Checkout Error:', error);
     res.status(500).json({ success: false, message: '伺服器錯誤' });
   } finally {
     connection.release();

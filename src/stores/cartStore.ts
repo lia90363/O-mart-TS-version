@@ -10,10 +10,9 @@ export interface Product {
   price: number;
   description: string;
   category: string;
-  image?: string;
-  variants?: {
+  variants: {
     name: string;
-    image?: string;
+    image: string;
     id: number;
   }[];
 }
@@ -30,7 +29,7 @@ export const useCartStore = defineStore('cart', () => {
 
   // --- 原有功能區 ---
 
-  // 加入購物車
+  // 加入購物車，先更新本地 State (UI 立即反應)，若已登入則同步發送 API 給後端 MySQL
   const addToCart = async (
     product: Product, 
     qty: number | string = 1,
@@ -40,6 +39,7 @@ export const useCartStore = defineStore('cart', () => {
     const numQty = Math.max(1, Math.floor(Number(qty) || 1));
     const authStore = useAuthStore();
 
+    // 檢查購物車內是否已有「同商品且同規格」的項目
     const index = cart.value.findIndex((item) => 
       item.id === product.id && 
       item.selectedVariantIndex === variantIndex
@@ -58,6 +58,7 @@ export const useCartStore = defineStore('cart', () => {
       if (item) item.qty += numQty;
     }
 
+    // 若使用者已登入，立即同步到資料庫
     if (authStore.user) {
       try {
         // 呼叫後端的合併購物車 API 或新增 API
@@ -69,7 +70,6 @@ export const useCartStore = defineStore('cart', () => {
             selectedVariantIndex: product.variants?.[variantIndex]?.id || null
           }]
         });
-        console.log('後端同步成功');
       } catch (error) {
         console.error('後端同步失敗:', error);
       }
@@ -79,6 +79,7 @@ export const useCartStore = defineStore('cart', () => {
     toast.showToast(`成功將 ${product.title}${variantLabel} 加入購物車！`);
   }
 
+  // 刪除品項
   const removeFromCart = (productId: number, variantIndex: number) => {
     // 強制檢查：如果不是陣列就先校正為空陣列，防止 filter 崩潰
     if (!Array.isArray(cart.value)) {
@@ -91,6 +92,7 @@ export const useCartStore = defineStore('cart', () => {
     );
   };
 
+  // 更新數量(透過+-)
   const updateQty = (productId: number, variantIndex: number, num: number) => {
     const item = cart.value.find(i => 
       i.id === productId && i.selectedVariantIndex === variantIndex
@@ -101,6 +103,7 @@ export const useCartStore = defineStore('cart', () => {
     if (item.qty <= 0) removeFromCart(productId, variantIndex)
   }
 
+  // 更新數量(透過輸入欄)
   const updateQtyByInput = (productId: number, value: string | number, variantIndex: number) => {
     const item = cart.value.find(i => 
       i.id === productId && i.selectedVariantIndex === variantIndex
@@ -114,11 +117,8 @@ export const useCartStore = defineStore('cart', () => {
     cart.value = []
   }
 
-  // --- 新增：同步功能區 ---
 
-  /**
-   * 將本地購物車合併到後端 (通常在登入成功後執行)
-   */
+  // 將本地購物車合併到後端 (通常在登入成功後執行)
   const syncCartToServer = async (userId: number) => {
     if (cart.value.length === 0) return; // 如果本地沒東西就不跑 API
 
@@ -129,7 +129,6 @@ export const useCartStore = defineStore('cart', () => {
       });
       
       if (response.data) {
-        console.log('購物車同步成功');
         // 同步完後，立刻從伺服器抓取最新的完整清單（包含原本就在雲端的商品）
         await fetchCartFromServer(userId);
       }
@@ -138,9 +137,7 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
-  /**
-   * 從後端抓取該用戶的最新購物車清單
-   */
+  // 從後端抓取該用戶的最新購物車清單
   const fetchCartFromServer = async (userId: number) => {
     try {
       const response = await apiClient.get(`cart/${userId}`);
@@ -157,7 +154,7 @@ export const useCartStore = defineStore('cart', () => {
     }
   };
 
-  // --- 計算屬性 ---
+  // 計算屬性
   const totalPrice = computed(() => {
     // 如果 cart.value 不是陣列，直接回傳 0，不執行 reduce
     if (!Array.isArray(cart.value)) return 0;
@@ -182,5 +179,5 @@ export const useCartStore = defineStore('cart', () => {
     totalItems
   };
 }, {
-  persist: true
+  persist: true // 即使是登入狀態，本地也存一份複本，加速首屏渲染
 });

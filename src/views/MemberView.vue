@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
-import apiClient from '@/api/axios'; // 記得用你設定好的 apiClient
+import apiClient from '@/api/axios';
 
+// 定義與 MySQL 後端對接的資料結構，包含配送資訊、訂單項目與訂單主體
 interface ShippingInfo {
   method: 'home' | 'store' | 'pickup';
   receiver: string | null;
@@ -17,7 +18,7 @@ interface OrderItem {
   title: string;
   image: string;
   variant_name: string;
-  price_at_time: number;
+  price_at_time: number; // 記錄購買時的價格（防止未來商品調價導致歷史訂單金額錯誤）
   qty: number;
 }
 
@@ -31,6 +32,7 @@ interface Order {
   items: OrderItem[]; // 包含多個商品
 }
 
+// 將資料庫存的英文標籤轉為中文顯示
 const getMethodLabel = (method: string | undefined) => {
   const labels: Record<string, string> = {
     home: '宅配到府',
@@ -44,13 +46,13 @@ const authStore = useAuthStore();
 const orders = ref<Order[]>([]);
 const isLoading = ref(true);
 
+// 抓取訂單紀錄，從 MySQL API 抓取目前登入使用者的所有歷史訂單
 const fetchOrders = async () => {
   if (!authStore.user) return;
   try {
     const response = await apiClient.get(`orders/${authStore.user.id}`);
     if (response.data.success) {
       orders.value = response.data.orders;
-      console.log('這是 API 回傳的整包訂單資料:', orders.value);
     }
   } catch (error) {
     console.error('抓取訂單失敗:', error);
@@ -61,12 +63,12 @@ const fetchOrders = async () => {
 
 onMounted(fetchOrders);
 
-// 格式化日期的小工具
+// 格式化日期：將 MySQL 產生的 timestamp 轉為本地易讀格式
 const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleString();
 };
 
-// 記錄目前展開的訂單 ID，null 代表全部收合
+// 交互邏輯：記錄目前展開的訂單 ID，null 代表全部收合
 const expandedOrderId = ref<number | null>(null);
 
 // 切換展開狀態
@@ -105,7 +107,7 @@ const toggleOrder = (orderId: number) => {
             </div>
           </div>
 
-          <!-- 使用 Vue 的內建動畫組件，或者簡單用 v-show 控制 -->
+          <!-- 訂單細節內容：當 ID 符合時顯示 -->
           <div v-show="expandedOrderId === order.order_id" class="order-content">
             <div class="order-items">
               <div v-for="item in order.items" :key="item.product_id + item.variant_name" class="order-row">
@@ -125,7 +127,7 @@ const toggleOrder = (orderId: number) => {
             <div class="shipping-detail-box" v-if="order.shipping_info">
                 <p class="section-label">配送資訊：</p>
                 <div class="detail-content">
-                    <!-- 先顯示配送方式，確認 method 有抓到 -->
+                    <!-- 根據不同的配送方式顯示對應欄位 -->
                     <p><strong>配送方式：</strong> {{ getMethodLabel(order.shipping_info.method) }}</p>
 
                     <!-- 宅配 (home) -->

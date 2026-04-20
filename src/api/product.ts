@@ -1,12 +1,10 @@
 import apiClient from "./axios";
 import type { AxiosResponse } from "axios";
-// 引入在 Store 定義好的 Product 型別
+// 引入在 Store 定義好的 Product 型別，確保產品資料符合規格
 import type { Product } from "@/stores/cartStore"; 
 
-// 加上泛型 <Product[]>
+// 【取得產品列表】
 export const getProducts = (): Promise<AxiosResponse<Product[]>> => {
-  // 原本是 "/products.json"，現在改成 "/products"
-  // (因為 baseURL 已經有 /api 了，所以這裡寫 /products 就好)
   return apiClient.get<Product[]>("/products");
 };
-// 需要API直接import { getProducts } from "@/api/product";
+// 使用範例：在組件中 import { getProducts } from "@/api/product";

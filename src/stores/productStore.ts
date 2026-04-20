@@ -10,6 +10,7 @@ export const useProductStore = defineStore("product", () => {
   const category = ref('all');
   const error = ref<string | null>(null);
 
+  // 前端即時篩選，邏輯：當關鍵字或分類改變時，自動計算出符合條件的商品
   const filteredProducts = computed(() => {
     // 預先處理搜尋字串，避免每次迴圈都重複處理
     const searchStr = keyword.value.trim().toLowerCase();
@@ -30,6 +31,7 @@ export const useProductStore = defineStore("product", () => {
     });
   });
 
+  // 取得商品列表，透過 getProducts API 去串接 MySQL 後端
   async function fetchProducts() {
     // 如果已經有資料，就不重複抓取
     if (products.value.length > 0) return;
@@ -39,7 +41,7 @@ export const useProductStore = defineStore("product", () => {
 
     try {
       const res = await getProducts();
-      console.log("API 吐出來的原始資料:", res.data);
+      // 這裡 res.data 就是從 MySQL 查詢出來的結果
       products.value = res.data || [];
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -52,6 +54,7 @@ export const useProductStore = defineStore("product", () => {
     }
   }
 
+  // 重置搜尋狀態
   function resetSearch() {
     keyword.value = '';
     category.value = 'all';
@@ -69,6 +72,6 @@ export const useProductStore = defineStore("product", () => {
   };
 }, {
   persist: {
-    paths: ['keyword', 'category'] // 👈 只存這兩個欄位，products 重整後會變回空陣列並重新觸發 fetch
+    paths: ['keyword', 'category'] // 只保存搜尋條件，商品列表不保存，確保每次重整頁面都能抓到最新的 MySQL 資料
   }
 });

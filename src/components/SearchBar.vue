@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue' // 刪掉 computed
+import { ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useProductStore } from '@/stores/productStore'
 import { useDebounce } from '@/composables/useDebounce'
@@ -10,6 +10,7 @@ const router = useRouter()
 const route = useRoute()
 
 const tempKeyword = ref('')
+// 透過 composable 處理防抖，避免每打一個字就觸發 API 請求
 const debounced = useDebounce(tempKeyword, 300)
 // useDebounce 寫了泛型，這裡 debounced 會自動推斷為 Ref<string>
 
@@ -27,8 +28,9 @@ const categories: CategoryOption[] = [
   { value: '戶外運動', label: '戶外運動' },
 ]
 
+// 監聽自定義事件：清空輸入框
 const handleReset = () => {
-  tempKeyword.value = ''; // 這行最重要，清空輸入框
+  tempKeyword.value = ''; 
 };
 
 onMounted(() => {
@@ -42,18 +44,19 @@ onUnmounted(() => {
 // 當 debounced 變了，同步到 Store
 watch(debounced, (newVal) => {
   productStore.keyword = newVal
-  
+  // 若不在首頁則自動導回首頁顯示搜尋結果
   if (newVal.trim() !== '' && route.name !== 'home') {
     router.push({ name: 'home' })
   }
 })
 
+// 雙向同步：當 Store 的關鍵字被外部修改時（例如切換頁面重置），同步回輸入框
 watch(() => productStore.keyword, (newVal) => {
-  tempKeyword.value = newVal; // 當 Store 被外部清空時，同步更新輸入框
+  tempKeyword.value = newVal;
 });
 
+// 監聽分類切換，當下拉選單改變時，同步更新網址的 query 參數
 watch(() => productStore.category, (newCat) => {
-  // 檢查：只有當「下拉選單選的分類」跟「目前路由 query」不一樣時，才執行跳轉
   if (newCat !== route.query.category) {
     router.push({ 
       path: '/', 
@@ -67,6 +70,7 @@ watch(() => productStore.category, (newCat) => {
 </script>
 
 <template>
+  <!-- 使用 Teleport 將搜尋列傳送到導覽列(Navbar)預留的 ID 位置 -->
   <Teleport to="#nav-search-target">
     <input v-model="tempKeyword" placeholder="搜尋..." />
 

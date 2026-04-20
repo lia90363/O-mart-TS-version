@@ -8,63 +8,47 @@ import { useToastStore } from '@/stores/useToastStore'
 const route = useRoute()
 const productStore = useProductStore()
 const cartStore = useCartStore()
-const quantity = ref(1)
 const toastStore = useToastStore()
-const selectedVariantIndex = ref(0);
 
-// 標註 item 的型別為 Product 或 null
+const quantity = ref(1)
+const selectedVariantIndex = ref(0); // 記錄使用者目前選中的規格索引
+
+// 取得商品資料，從 Store 中找出對應 ID 的商品
 const item = computed<Product | null>(() => {
     return productStore.products.find(p => Number(p.id) === id.value) || null
 })
 
 // 計算當前應該顯示的圖片與名稱
-// 核心修正：加入多重備援邏輯
 const currentDisplayImage = computed(() => {
   if (!item.value) return '';
-
-  // 檢查是否有規格，且該規格是否有圖
-  const variants = item.value.variants;
-  if (variants && variants.length > 0) {
-    const variant = variants[selectedVariantIndex.value];
-    if (variant && variant.image) return variant.image;
-  }
-
-  // 如果沒規格、或規格沒圖（如鞋子），回傳商品外層主圖
-  return item.value.image || '';
+  return item.value.variants[selectedVariantIndex.value]?.image || '';
 });
 
+// 加入購物車
 const handleAddToCart = () => {
-
-  // 不要因為沒有 variants 就 return
   if (!item.value) return;
 
-  const hasVariants = item.value.variants && item.value.variants.length > 0;
-  
   const variants = item.value.variants;
-  // 安全讀取規格名稱
-  let selectedName = '';
-  if (hasVariants) {
-    selectedName = variants?.[selectedVariantIndex.value]?.name || '';
-  }
+  const selectedVariant = variants[selectedVariantIndex.value];
+  const selectedName = selectedVariant?.name || '';
 
+  // 呼叫 CartStore 進行本地與 MySQL 同步
   cartStore.addToCart(
     item.value, 
     quantity.value, 
-    hasVariants ? selectedVariantIndex.value : 0,
-    selectedName
+    selectedVariantIndex.value, // 傳遞選中的索引
+    selectedName                // 傳遞選中的規格名稱
   );
   
-  const toastMsg = selectedName 
-    ? `已加入 ${quantity.value} 件 ${item.value.title} (${selectedName})`
-    : `已加入 ${quantity.value} 件 ${item.value.title}`;
-    
+  // 顯示提示訊息
+  const toastMsg = `已加入 ${quantity.value} 件 ${item.value.title} (${selectedName})`;
   toastStore.showToast(toastMsg);
 };
 
-// 強制轉為數字，並使用 computed 確保路由切換時 ID 會更新
+// 將路由參數 ID 轉為數字
 const id = computed(() => Number(route.params.id))
 
-// 修正 input 的手動輸入問題
+// 數量防呆，確保手動輸入時不會出現負數或非數字
 const updateQuantity = (val: string | number) => {
   const num =  typeof val === 'string' ? parseInt(val) : val;
   if (isNaN(num) || num < 1) {
@@ -81,6 +65,7 @@ onMounted(async () => {
   }
 })
 
+// 路由切換監聽
 watch(() => route.params.id, () => {
   selectedVariantIndex.value = 0;
   quantity.value = 1; // 順便重置數量
@@ -92,6 +77,7 @@ watch(() => route.params.id, () => {
     <div class="product-detail">
         <div v-if="productStore.loading" class="empty">載入中...</div>
         <div v-else-if="!item" class="empty">找不到商品</div>
+        
         <div v-else class="detail-container">
             <!-- 左側：圖片區 -->
             <div class="detail-image">
@@ -116,7 +102,7 @@ watch(() => route.params.id, () => {
                 <div class="variant-options" v-if="item.variants && item.variants.length > 1">
                     <button 
                         v-for="(v, index) in item.variants" 
-                        :key="index"
+                        :key="v.id"
                         :class="['variant-btn', { active: selectedVariantIndex === index }]"
                         @click="selectedVariantIndex = index"
                     >

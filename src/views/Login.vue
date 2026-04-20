@@ -9,6 +9,7 @@ const router = useRouter();
 const route = useRoute(); 
 const toast = useToastStore();
 
+// 使用 reactive 集中管理表單欄位
 const loginForm = reactive({
   name: '', 
   email: '',   
@@ -16,9 +17,10 @@ const loginForm = reactive({
   confirmPassword: ''
 });
 
-const isLoading = ref(false);
-const isRegisterMode = ref(false);
+const isLoading = ref(false); // 防止重複點擊送出
+const isRegisterMode = ref(false); // 切換「登入」與「註冊」模式
 
+// 處理登入
 const handleLogin = async () => {
   if (isLoading.value) return;
   
@@ -28,6 +30,7 @@ const handleLogin = async () => {
     const res = await authStore.login(loginForm.email, loginForm.password);
     
     if (res.success) {
+      // 登入成功後，檢查是否有「被攔截前」的路徑，沒有則導向首頁
       const redirectPath = (route.query.redirect as string) || '/';
       router.push(redirectPath);
       toast.showToast('歡迎回來！'); 
@@ -42,6 +45,7 @@ const handleLogin = async () => {
   }
 };
 
+// 處理註冊，包含完整的前端欄位驗證，確保資料送到 MySQL 前是格式正確的
 const handleRegister = async () => {
   if (isLoading.value) return;
 
@@ -99,6 +103,7 @@ const handleSubmit = () => {
     <h2>{{ isRegisterMode ? '會員註冊' : '會員登入' }}</h2>
     <hr class="orange-divider">
     
+    <!-- 使用 .prevent 阻止表單原生跳頁行為 -->
     <form @submit.prevent="handleSubmit">
       <input 
         v-if="isRegisterMode"

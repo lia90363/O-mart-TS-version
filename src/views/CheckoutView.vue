@@ -11,18 +11,22 @@ const cartStore = useCartStore();
 const authStore = useAuthStore();
 const router = useRouter();
 const toast = useToastStore();
+
 const FREE_SHIPPING_THRESHOLD = 999;
 const couponCode = ref('');
 const discount = ref(0);
 const isLoading = ref(false);
 
+// 計算距離免運差額
 const amountToFreeShipping = computed(() => {
   const diff = FREE_SHIPPING_THRESHOLD - cartStore.totalPrice;
   return diff > 0 ? diff : 0;
 });
 
+// 是否達成免運
 const isFreeShipping = computed(() => cartStore.totalPrice >= FREE_SHIPPING_THRESHOLD);
 
+// 套用折扣碼
 const applyCoupon = () => {
   if (couponCode.value === 'Omart520') {
     discount.value = 100;
@@ -33,6 +37,7 @@ const applyCoupon = () => {
   }
 };
 
+// 運送設定
 const selectedMethodId = ref('home'); 
 
 const shippingMethods = [
@@ -41,6 +46,7 @@ const shippingMethods = [
   { id: 'pickup', label: '門市自取', shippingFee: 0 }
 ];
 
+// 根據免運門檻與選擇方式計算當前運費
 const currentShippingFee = computed(() => {
   if (isFreeShipping.value) return 0;
   
@@ -48,6 +54,7 @@ const currentShippingFee = computed(() => {
   return method ? method.shippingFee : 0;
 });
 
+// 響應式表單資料
 const shippingData = reactive({
   address: '',
   receiver: '',
@@ -57,19 +64,14 @@ const shippingData = reactive({
   pickupTime: ''
 });
 
+// 確認下單
 const handleConfirmCheckout = async () => {
-  const payload = {
-    userId: authStore.user?.id, // 重點：檢查這是不是 undefined
-    totalPrice: finalTotal.value,
-    shippingMethod: selectedMethodId.value,
-    shippingDetail: shippingData 
-  };
-  console.log('🚀 即將發送結帳請求，封包內容:', payload);
-  
+  // 驗證區：確保資料完整
   if (cartStore.cart.length === 0) return;
   if (!authStore.user) return toast.showToast('請先登入');
   if (isLoading.value) return;
 
+  // 各種配送方式的必填檢查
   if (selectedMethodId.value === 'home' && !shippingData.receiver) {
     return toast.showToast('請填寫收件人姓名');
   }  
@@ -103,21 +105,23 @@ const handleConfirmCheckout = async () => {
     if (response.data.success) {
       toast.showToast('訂單已成立！感謝您的購買');
       cartStore.clearCart(); // 清空本地購物車
-      router.replace('/member'); // 跳轉到會員中心看訂單，使用replace無法上一頁回下單頁面
+      router.replace('/member'); // 跳轉到訂單紀錄，使用replace無法上一頁回下單頁面
     }
   } catch (error) {
     toast.showToast('結帳失敗，請稍後再試');
+  } finally {
+    isLoading.value = false;
   }
 };
 
+// 最終應付金額計算
 const finalTotal = computed(() => {
   return cartStore.totalPrice + currentShippingFee.value - discount.value;
 });
 
+// 安全機制：若購物車空了就強制踢回首頁或會員中心
 watchEffect(() => { // 立即執行使用 watchEffect
-  const cartData = cartStore.cart; 
-  
-  if (!cartData || cartData.length === 0) {
+  if (!cartStore.cart || cartStore.cart.length === 0) {
     router.replace('/member');
   }
 });
@@ -143,7 +147,7 @@ watchEffect(() => { // 立即執行使用 watchEffect
     <div class="checkout-list">
       <div v-for="item in cartStore.cart" :key="item.id + item.selectedVariantIndex" class="checkout-item">
         <div class="checkout-img">
-          <img :src="item.variants?.[item.selectedVariantIndex || 0]?.image || item.image"  :alt="item.title" loading="lazy">
+          <img :src="item.variants?.[item.selectedVariantIndex]?.image" :alt="item.title" loading="lazy">
         </div>
         <div class="checkout-info">
           <span class="checkout-title">{{ item.title }}</span>
