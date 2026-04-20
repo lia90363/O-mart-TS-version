@@ -75,7 +75,7 @@ const handleRegister = async () => {
     const res = await authStore.register(loginForm.name, loginForm.email, loginForm.password);
     
     if (res.success) {
-      toast.showToast('註冊成功！請重新登入');
+      toast.showToast('註冊成功！請至信箱點擊驗證連結');
       isRegisterMode.value = false; // 切換回登入模式
       loginForm.password = '';      // 清空密碼安全考量
       loginForm.confirmPassword = '';  

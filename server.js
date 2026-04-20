@@ -3,7 +3,17 @@ import cors from 'cors';
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 import 'dotenv/config';
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 const saltRounds = 10; // 加密強度 (bcrypt 雜湊次數)
 const app = express();
@@ -83,6 +93,9 @@ app.post('/api/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password); // 安全比對加密密碼
 
     if (isMatch) {
+      if (user.status === 0) {
+        return res.status(403).json({ success: false, message: '請先至信箱完成驗證喔！' });
+      }
       // 將 user id 包進 token 裡，並設定 24 小時後過期
       const token = jwt.sign(
         { userId: user.id }, 
@@ -190,19 +203,50 @@ app.post('/api/cart/merge', async (req, res) => {
 // [POST] 註冊新會員
 app.post('/api/register', async (req, res) => {
   const { email, password, name } = req.body;
+  const token = crypto.randomBytes(32).toString('hex');
   try {
     const [existing] = await pool.query("SELECT id FROM users WHERE email = ?", [email]);
     if (existing.length > 0) return res.status(400).json({ success: false, message: '此帳號已被註冊' });
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+    // 寫入資料庫，status 預設 0 (未驗證)，並存入 token
     await pool.query(
-      "INSERT INTO users (email, password, name) VALUES (?, ?, ?)",
-      [email, hashedPassword, name] // 存入加密後的密碼
+      "INSERT INTO users (email, password, name, verification_token, status) VALUES (?, ?, ?, ?, 0)",
+      [email, hashedPassword, name, token]
     );
-    res.json({ success: true, message: '註冊成功！' });
+
+    // 發送驗證信
+    const verifyUrl = `http://localhost:3000/api/verify/${token}`;
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'O-mart 會員帳號驗證',
+      html: `<h3>歡迎加入 O-mart！</h3><p>請點擊下方連結啟用帳號：</p><a href="${verifyUrl}">點我驗證帳號</a>`
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ success: true, message: '註冊成功！請至信箱點擊驗證連結' });
   } catch (error) {
     res.status(500).json({ success: false, message: '註冊失敗' });
+  }
+});
+
+// 信箱驗證
+app.get('/api/verify/:token', async (req, res) => {
+  const { token } = req.params;
+  try {
+    const [rows] = await pool.query("SELECT id FROM users WHERE verification_token = ?", [token]);
+    
+    if (rows.length === 0) return res.send('驗證連結無效');
+
+    // 驗證成功：清空 token 並將 status 改為 1 (已驗證)
+    await pool.query("UPDATE users SET status = 1, verification_token = NULL WHERE verification_token = ?", [token]);
+    
+    // 直接導向前端登入頁面
+    res.redirect('http://localhost:5173/login?verified=true');
+  } catch (error) {
+    res.status(500).send('驗證過程發生錯誤');
   }
 });
 
