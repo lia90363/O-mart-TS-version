@@ -8,7 +8,7 @@ import crypto from 'crypto';
 import 'dotenv/config';
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
+  host: '74.125.204.108',
   port: 587,        // 從 465 改為 587
   secure: false,    // Port 587 必須設定為 false
   auth: {
@@ -16,7 +16,8 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS
   },
   tls: {
-    rejectUnauthorized: false // 防止雲端環境的憑證問題
+    rejectUnauthorized: false, // 防止雲端環境的憑證問題
+    servername: 'smtp.gmail.com' //
   }
 });
 
