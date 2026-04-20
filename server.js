@@ -231,11 +231,12 @@ app.post('/api/register', async (req, res) => {
       `,
     };
 
+    console.log('準備透過 SendGrid 發信給:', email); 
+
     // 使用 SendGrid API 發信 (非同步，不擋 res)
     sgMail.send(msg)
       .then(() => console.log(`✅ SendGrid 信件已成功送達: ${email}`))
       .catch((error) => console.error('❌ SendGrid 發信失敗:', error.response ? error.response.body : error));
-
   } catch (error) {
     console.error('❌ 註冊出錯:', error);
     if (!res.headersSent) res.status(500).json({ success: false });
@@ -254,7 +255,7 @@ app.get('/api/verify/:token', async (req, res) => {
     await pool.query("UPDATE users SET status = 1, verification_token = NULL WHERE verification_token = ?", [token]);
     
     // 直接導向前端登入頁面
-    res.redirect('http://https://o-mart-ts-version.vercel.app/login');
+    res.redirect('https://o-mart-ts-version.vercel.app/login');
   } catch (error) {
     res.status(500).send('驗證過程發生錯誤');
   }
