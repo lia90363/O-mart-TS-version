@@ -3,23 +3,11 @@ import cors from 'cors';
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import sgMail from '@sendgrid/mail';
 import 'dotenv/config';
 
-const transporter = nodemailer.createTransport({
-  host: '74.125.204.108',
-  port: 587,        // 從 465 改為 587
-  secure: false,    // Port 587 必須設定為 false
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false, // 防止雲端環境的憑證問題
-    servername: 'smtp.gmail.com' //
-  }
-});
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const saltRounds = 10; // 加密強度 (bcrypt 雜湊次數)
 const app = express();
@@ -217,22 +205,36 @@ app.post('/api/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // 使用 pool.query 是最安全的，它會自動處理連線釋放
     await pool.query(
       "INSERT INTO users (email, password, name, verification_token, status) VALUES (?, ?, ?, ?, 0)",
       [email, hashedPassword, name, token]
     );
 
-    // 💡 先發送回應，徹底中斷前端等待
-    res.json({ success: true, message: '註冊成功！' });
+    // 先回傳回應給前端，避免轉圈圈
+    res.json({ success: true, message: '註冊成功！請至信箱點擊驗證連結' });
 
-    // --- 發信邏輯移到最後，完全不影響 res ---
-    const verifyUrl = `http://localhost:3000/api/verify/${token}`;
-    const mailOptions = { /* ... 你的內容 ... */ };
-    
-    transporter.sendMail(mailOptions)
-      .then(() => console.log(`✅ 信件已成功送達: ${email}`))
-      .catch(err => console.error('❌ 背景發信失敗:', err.message));
+    // 準備發信資料
+    const backendUrl = 'https://o-mart-ts-version-production.up.railway.app'; 
+    const verifyUrl = `${backendUrl}/api/verify/${token}`;
+
+    const msg = {
+      to: email,
+      from: 'lia90363@gmail.com', 
+      subject: 'O-mart 會員帳號驗證',
+      html: `
+        <div style="font-family: sans-serif; border: 1px solid #eee; padding: 20px;">
+          <h3>歡迎加入 O-mart，${name}！</h3>
+          <p>請點擊下方連結啟用您的帳號，開始購物吧：</p>
+          <a href="${verifyUrl}" style="background: #ff6600; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">點我驗證帳號</a>
+          <p style="color: #666; font-size: 12px; margin-top: 20px;">如果點擊無效，請複製此網址：${verifyUrl}</p>
+        </div>
+      `,
+    };
+
+    // 使用 SendGrid API 發信 (非同步，不擋 res)
+    sgMail.send(msg)
+      .then(() => console.log(`✅ SendGrid 信件已成功送達: ${email}`))
+      .catch((error) => console.error('❌ SendGrid 發信失敗:', error.response ? error.response.body : error));
 
   } catch (error) {
     console.error('❌ 註冊出錯:', error);
@@ -252,7 +254,7 @@ app.get('/api/verify/:token', async (req, res) => {
     await pool.query("UPDATE users SET status = 1, verification_token = NULL WHERE verification_token = ?", [token]);
     
     // 直接導向前端登入頁面
-    res.redirect('http://localhost:5173/login?verified=true');
+    res.redirect('http://https://o-mart-ts-version.vercel.app/login');
   } catch (error) {
     res.status(500).send('驗證過程發生錯誤');
   }
