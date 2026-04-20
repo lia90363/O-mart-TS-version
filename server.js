@@ -8,12 +8,15 @@ import crypto from 'crypto';
 import 'dotenv/config';
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com', // 這裡只有 smtp.gmail.com
-  port: 465,
-  secure: true,
+  host: 'smtp.gmail.com',
+  port: 587,        // 從 465 改為 587
+  secure: false,    // Port 587 必須設定為 false
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false // 防止雲端環境的憑證問題
   }
 });
 
@@ -204,34 +207,28 @@ app.post('/api/cart/merge', async (req, res) => {
 
 // [POST] 註冊新會員
 app.post('/api/register', async (req, res) => {
-  console.log('--- 收到註冊請求 ---');
   const { email, password, name } = req.body;
   const token = crypto.randomBytes(32).toString('hex');
   
   try {
-    console.log('1. 檢查帳號中...');
     const [existing] = await pool.query("SELECT id FROM users WHERE email = ?", [email]);
     if (existing.length > 0) return res.status(400).json({ success: false, message: '此帳號已被註冊' });
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    console.log('2. 寫入資料庫中...');
     // 使用 pool.query 是最安全的，它會自動處理連線釋放
     await pool.query(
       "INSERT INTO users (email, password, name, verification_token, status) VALUES (?, ?, ?, ?, 0)",
       [email, hashedPassword, name, token]
     );
-    console.log('3. 資料庫寫入成功！');
 
     // 💡 先發送回應，徹底中斷前端等待
     res.json({ success: true, message: '註冊成功！' });
-    console.log('4. 已回傳 JSON 給前端');
 
     // --- 發信邏輯移到最後，完全不影響 res ---
     const verifyUrl = `http://localhost:3000/api/verify/${token}`;
     const mailOptions = { /* ... 你的內容 ... */ };
     
-    console.log('5. 嘗試背景發信...');
     transporter.sendMail(mailOptions)
       .then(() => console.log(`✅ 信件已成功送達: ${email}`))
       .catch(err => console.error('❌ 背景發信失敗:', err.message));
