@@ -1,0 +1,37 @@
+@use '../variables' as *;
+@use '../mixins' as *;
+
+.reset-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;    
+
+    form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 300px;
+        gap: 10px; 
+    }
+
+    form input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid $gray;
+        box-sizing: border-box;
+        border-radius: 6px;
+        margin-bottom: 6px;
+    }
+
+    form button {
+        padding: 5px 16px;
+        background-color: $primary-soft;
+        border: none;
+        cursor: pointer;
+        border-radius: 10px;
+        max-width: 120px;
+        margin-top: 10px;
+    }
+}

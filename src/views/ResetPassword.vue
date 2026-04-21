@@ -40,7 +40,8 @@ const handleReset = async () => {
 
 <template>
   <div class="reset-container">
-    <h2>重設您的密碼</h2>
+    <h2>重設密碼</h2>
+    <hr class="orange-divider">
     <form @submit.prevent="handleReset">
       <input v-model="newPassword" type="password" placeholder="請輸入新密碼" required>
       <input v-model="confirmPassword" type="password" placeholder="再次確認新密碼" required>

@@ -443,9 +443,22 @@ app.post('/api/forgot-password', async (req, res) => {
       to: email,
       from: 'lia90363@gmail.com',
       subject: 'O-mart 重設密碼請求',
-      html: `<p>您收到此信件是因為您（或有人）請求重設密碼。</p>
-             <p>請點擊下方連結進行重設（連結於 1 小時內有效）：</p>
-             <a href="${resetUrl}">重設我的密碼</a>`
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; color: #333;">
+          <h3>重設您的密碼</h3>
+          <p>您好，我們收到您有重設密碼的需求。</p>
+          <p>請點擊下方按鈕進行重設（連結於 1 小時內有效）：</p>
+          <div style="margin: 30px 0;">
+            <a href="${resetUrl}" 
+               target="_blank" 
+               style="background-color: #ff6600; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+               立即重設密碼
+            </a>
+          </div>
+          <p style="font-size: 12px; color: #888;">如果按鈕無法點擊，請複製此連結至瀏覽器：<br>
+          <a href="${resetUrl}">${resetUrl}</a></p>
+        </div>
+      `
     };
 
     await sgMail.send(msg);
