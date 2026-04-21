@@ -376,8 +376,8 @@ app.get('/api/orders/:userId', authenticateToken, async (req, res) => {
       SELECT 
         o.id AS order_id, o.total_price, o.created_at, o.status,
         o.shipping_method, o.receiver_name, o.shipping_address, o.store_name, o.phone,
-        oi.product_id, oi.variant_name, oi.price_at_time, oi.qty, oi.image
-        p.title, 
+        oi.product_id, oi.variant_name, oi.price_at_time, oi.qty, oi.image,
+        p.title 
       FROM orders o
       JOIN order_items oi ON o.id = oi.order_id
       JOIN products p ON oi.product_id = p.id

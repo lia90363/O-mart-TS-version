@@ -85,7 +85,7 @@ const handleConfirmCheckout = async () => {
   } 
 
   if ((selectedMethodId.value === 'store' || selectedMethodId.value === 'home') && !shippingData.phone) {
-    return toast.showToast('請填寫收件人手機號碼');
+    return toast.showToast('請填寫手機號碼');
   } 
 
   const phoneRegex = /^09\d{8}$/;
@@ -186,6 +186,8 @@ watchEffect(() => { // 立即執行使用 watchEffect
       <div v-if="selectedMethodId === 'home'" class="form-group">
         <label>收件人姓名</label>
         <input type="text" v-model="shippingData.receiver" placeholder="請輸入姓名">
+        <label>收件人手機</label>
+        <input type="tel" v-model="shippingData.phone" placeholder="請輸入手機號碼">
         <label>配送地址</label>
         <input type="text" v-model="shippingData.address" placeholder="請輸入完整地址">
       </div>
