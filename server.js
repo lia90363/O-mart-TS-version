@@ -270,7 +270,7 @@ app.post('/api/checkout', authenticateToken, async (req, res) => {
   try {
     // 重新從資料庫撈取商品確保價格正確
     const [dbCartItems] = await connection.query(`
-      SELECT c.product_id, c.qty, p.price, v.name as variant_name
+      SELECT c.product_id, c.qty, p.price, v.name as variant_name, v.image
       FROM cart_items c
       JOIN products p ON c.product_id = p.id
       LEFT JOIN product_variants v ON (c.product_id = v.product_id AND c.variant_index = v.id)
@@ -321,8 +321,8 @@ app.post('/api/checkout', authenticateToken, async (req, res) => {
     // 寫入訂單明細
     for (const item of dbCartItems) {
       await connection.query(
-        "INSERT INTO order_items (order_id, product_id, variant_name, price_at_time, qty) VALUES (?, ?, ?, ?, ?)",
-        [orderId, item.product_id, item.variant_name || '標準款', item.price, item.qty]
+        "INSERT INTO order_items (order_id, product_id, variant_name, price_at_time, qty) VALUES (?, ?, ?, ?, ?, ?)",
+        [orderId, item.product_id, item.variant_name || '標準款', item.price, item.qty, item.image]
       );
     }
 
@@ -376,47 +376,48 @@ app.get('/api/orders/:userId', authenticateToken, async (req, res) => {
       SELECT 
         o.id AS order_id, o.total_price, o.created_at, o.status,
         o.shipping_method, o.receiver_name, o.shipping_address, o.store_name, o.phone,
-        oi.product_id, oi.variant_name, oi.price_at_time, oi.qty,
-        p.title, v.image
+        oi.product_id, oi.variant_name, oi.price_at_time, oi.qty, oi.image
+        p.title, 
       FROM orders o
       JOIN order_items oi ON o.id = oi.order_id
       JOIN products p ON oi.product_id = p.id
-      LEFT JOIN product_variants v ON (oi.product_id = v.product_id AND oi.variant_name = v.name)
       WHERE o.user_id = ?
       ORDER BY o.created_at DESC
     `, [userId]);
 
     const orders = rows.reduce((acc, row) => {
-      const { 
-        order_id, total_price, created_at, status, 
-        shipping_method, receiver_name, shipping_address, store_name, phone,
-        ...item 
-      } = row;
-
-      if (!acc[order_id]) {
-        acc[order_id] = {
-          order_id,
-          total_price,
-          created_at,
-          status,
+      if (!acc[row.order_id]) {
+        acc[row.order_id] = {
+          order_id: row.order_id,
+          total_price: row.total_price,
+          created_at: row.created_at,
+          status: row.status,
           shipping_info: {
-            method: shipping_method,
-            receiver: receiver_name,
-            address: shipping_address,
-            store: store_name,
-            phone: phone
+            method: row.shipping_method,
+            receiver: row.receiver_name,
+            address: row.shipping_address,
+            store: row.store_name,
+            phone: row.phone
           },
           items: []
         };
       }
-      acc[order_id].items.push(item);
+      acc[row.order_id].items.push({
+        product_id: row.product_id,
+        title: row.title,
+        variant_name: row.variant_name,
+        price_at_time: row.price_at_time,
+        qty: row.qty,
+        image: row.image // 💡 這裡直接使用我們在訂單明細存好的圖
+      });
       return acc;
     }, {});
 
     res.json({ success: true, orders: Object.values(orders) });
+
   } catch (error) {
     console.error('Fetch Orders Error:', error);
-    res.status(500).json({ success: false, message: '無法取得訂單資料' });
+    res.status(500).json({ success: false, message: '伺服器錯誤' });
   }
 });
 
