@@ -34,7 +34,7 @@ const handleQtyChange = (e: Event, id: number, variantIndex: number) => {
         <li v-for="item in cartStore.cart" :key="`${item.id}-${item.selectedVariantIndex}`" class="cart-card">
             <div class="cart-img">
                 <router-link :to="`/product/${item.id}`">
-                    <img :src="item.image" :alt="item.title" loading="lazy">
+                    <img :src="item.variants?.[0]?.image" :alt="item.title" loading="lazy">
                 </router-link>
             </div>
             <div class="item-info">

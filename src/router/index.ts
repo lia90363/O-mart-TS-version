@@ -36,6 +36,11 @@ const router = createRouter({
       name: 'member',
       component: () => import('../views/MemberView.vue'),
       meta: { requiresAuth: true } // 標記需要登入
+    },
+    {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: () => import('../views/ResetPassword.vue')
     }
   ],
   scrollBehavior(to, from, savedPosition) {

@@ -84,9 +84,14 @@ const handleConfirmCheckout = async () => {
     return toast.showToast('請選擇取件門市');
   } 
 
-  if (selectedMethodId.value === 'store' && !shippingData.phone) {
-    return toast.showToast('請填寫手機號碼');
+  if ((selectedMethodId.value === 'store' || selectedMethodId.value === 'home') && !shippingData.phone) {
+    return toast.showToast('請填寫收件人手機號碼');
   } 
+
+  const phoneRegex = /^09\d{8}$/;
+  if (shippingData.phone && !phoneRegex.test(shippingData.phone)) {
+    return toast.showToast('手機格式錯誤，請輸入 09 開頭的 10 位數字');
+  }
 
   if (selectedMethodId.value === 'pickup' && !shippingData.pickupDate) {
     return toast.showToast('請選擇取貨時間');
@@ -147,7 +152,7 @@ watchEffect(() => { // 立即執行使用 watchEffect
     <div class="checkout-list">
       <div v-for="item in cartStore.cart" :key="item.id + item.selectedVariantIndex" class="checkout-item">
         <div class="checkout-img">
-          <img :src="item.image" :alt="item.title" loading="lazy">
+          <img :src="item.variants?.[0]?.image"  :alt="item.title" loading="lazy">
         </div>
         <div class="checkout-info">
           <span class="checkout-title">{{ item.title }}</span>

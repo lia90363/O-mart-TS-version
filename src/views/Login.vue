@@ -3,6 +3,7 @@ import { ref, reactive } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter, useRoute } from 'vue-router';
 import { useToastStore } from '@/stores/useToastStore';
+import apiClient from '@/api/axios';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -59,14 +60,24 @@ const handleRegister = async () => {
     return;
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(loginForm.email)) {
     toast.showToast('Email 格式不正確');
     return;
   }
 
+  const passwordRegex = /^[a-zA-Z0-9!@#$%^&*._-]+$/;
+
+  if (!passwordRegex.test(loginForm.password)) {
+    toast.showToast('密碼僅限使用英文、數字或常用符號哦！');
+    return;
+  }
   if (loginForm.password.length < 6) {
     toast.showToast('密碼長度至少需要 6 位數');
+    return;
+  }
+  if (/[^\x00-\xff]/.test(loginForm.password)) {
+    toast.showToast('密碼請勿使用中文、全形字或中文字元！');
     return;
   }
 
@@ -96,6 +107,34 @@ const handleSubmit = () => {
     handleLogin();    // 執行登入邏輯
   }
 };
+
+// 處理忘記密碼
+const handleForgotPassword = async () => {
+  const email = window.prompt('請輸入您的註冊信箱：');
+  
+  // 使用者按取消或沒填
+  if (!email) return;
+
+  // 基本格式檢查
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return toast.showToast('Email 格式不正確');
+  }
+
+  isLoading.value = true;
+  try {
+    const res = await apiClient.post('forgot-password', { email });
+    if (res.data.success) {
+      toast.showToast('重設密碼信件已寄出，請檢查您的信箱！');
+    } else {
+      toast.showToast(res.data.message || '找不到此帳號');
+    }
+  } catch (err) {
+    toast.showToast('發送失敗，請確認信箱是否正確');
+  } finally {
+    isLoading.value = false;
+  }
+};
 </script>
 
 <template>
@@ -109,21 +148,22 @@ const handleSubmit = () => {
         v-if="isRegisterMode"
         v-model="loginForm.name" 
         type="text" 
-        placeholder="姓名" 
+        placeholder="您的姓名" 
         :disabled="isLoading" 
         required
       >
       <input 
         v-model="loginForm.email" 
         type="email" 
-        placeholder="信箱" 
+        placeholder="帳號(您的信箱)" 
         :disabled="isLoading" 
         required
       >
       <input 
         v-model="loginForm.password" 
         type="password" 
-        placeholder="密碼" 
+        placeholder="密碼(至少六位)" 
+        @keydown.space.prevent 
         :disabled="isLoading" 
         required
       >
@@ -151,6 +191,11 @@ const handleSubmit = () => {
           </button>
           <button type="button" @click="isRegisterMode = false" :disabled="isLoading">返回</button>
         </template>
+      </div>
+      <div class="login-extras" v-if="!isRegisterMode">
+        <a href="javascript:void(0)" @click="handleForgotPassword" class="forgot-link">
+          忘記密碼？
+        </a>
       </div>
     </form>
   </div>

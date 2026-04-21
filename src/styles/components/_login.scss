@@ -47,3 +47,13 @@ form input {
 }
 
 .error-text { color: #ff4d4f; font-size: 14px; margin-top: 8px; }
+
+.login-extras{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 2px;
+    color: $gray-dark;
+    font-size: 0.9rem;    
+}

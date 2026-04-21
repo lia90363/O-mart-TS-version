@@ -420,6 +420,67 @@ app.get('/api/orders/:userId', authenticateToken, async (req, res) => {
   }
 });
 
+// 重設密碼
+app.post('/api/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const [users] = await pool.query("SELECT id FROM users WHERE email = ?", [email]);
+    if (users.length === 0) return res.status(404).json({ success: false, message: '找不到此帳號' });
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 3600000); // 1 小時後過期
+
+    await pool.query(
+      "UPDATE users SET reset_token = ?, reset_expires = ? WHERE email = ?",
+      [token, expires, email]
+    );
+
+    // 指向前端的重設密碼頁面
+    const resetUrl = `https://o-mart-ts-version.vercel.app/reset-password?token=${token}`;
+
+    const msg = {
+      to: email,
+      from: 'lia90363@gmail.com',
+      subject: 'O-mart 重設密碼請求',
+      html: `<p>您收到此信件是因為您（或有人）請求重設密碼。</p>
+             <p>請點擊下方連結進行重設（連結於 1 小時內有效）：</p>
+             <a href="${resetUrl}">重設我的密碼</a>`
+    };
+
+    await sgMail.send(msg);
+    res.json({ success: true, message: '重設密碼信件已寄出' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: '伺服器錯誤' });
+  }
+});
+
+app.post('/api/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  try {
+    // 檢查 Token 是否存在且未過期
+    const [users] = await pool.query(
+      "SELECT id FROM users WHERE reset_token = ? AND reset_expires > NOW()",
+      [token]
+    );
+
+    if (users.length === 0) {
+      return res.status(400).json({ success: false, message: '連結無效或已過期' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    
+    // 更新密碼並清空 Token
+    await pool.query(
+      "UPDATE users SET password = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?",
+      [hashedPassword, users[0].id]
+    );
+
+    res.json({ success: true, message: '密碼重設成功！' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: '重設失敗' });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`--- 伺服器啟動成功：http://localhost:${PORT} ---`);
 });

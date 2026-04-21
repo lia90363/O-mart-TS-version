@@ -16,10 +16,12 @@ interface ShippingInfo {
 interface OrderItem {
   product_id: number;
   title: string;
-  image: string;
   variant_name: string;
   price_at_time: number; // 記錄購買時的價格（防止未來商品調價導致歷史訂單金額錯誤）
   qty: number;
+  variants: {
+    image: string;
+  }[];
 }
 
 // 訂單主體的型別
@@ -113,7 +115,7 @@ const toggleOrder = (orderId: number) => {
               <div v-for="item in order.items" :key="item.product_id + item.variant_name" class="order-row">
                 <div class="order-pic">
                     <router-link :to="`/product/${item.product_id}`">
-                      <img :src="item.image" :alt="item.title" class="order-img">
+                      <img :src="item.variants?.[0]?.image"  :alt="item.title" class="order-img">
                     </router-link>
                 </div>
                 <div class="order-info">
