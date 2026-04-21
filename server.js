@@ -270,10 +270,10 @@ app.post('/api/checkout', authenticateToken, async (req, res) => {
   try {
     // 重新從資料庫撈取商品確保價格正確
     const [dbCartItems] = await connection.query(`
-      SELECT c.product_id, c.qty, p.price, v.name as variant_name, v.image
+      SELECT c.product_id, c.qty, p.price, v.name as variant_name, v.image as image
       FROM cart_items c
       JOIN products p ON c.product_id = p.id
-      LEFT JOIN product_variants v ON (c.product_id = v.product_id AND c.variant_index = v.id)
+      LEFT JOIN product_variants v ON c.variant_index = v.id 
       WHERE c.user_id = ?
     `, [userId]);
 
@@ -321,7 +321,7 @@ app.post('/api/checkout', authenticateToken, async (req, res) => {
     // 寫入訂單明細
     for (const item of dbCartItems) {
       await connection.query(
-        "INSERT INTO order_items (order_id, product_id, variant_name, price_at_time, qty) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO order_items (order_id, product_id, variant_name, price_at_time, qty, image) VALUES (?, ?, ?, ?, ?, ?)",
         [orderId, item.product_id, item.variant_name || '標準款', item.price, item.qty, item.image]
       );
     }
