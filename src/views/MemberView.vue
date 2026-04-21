@@ -50,7 +50,7 @@ const isLoading = ref(true);
 const fetchOrders = async () => {
   if (!authStore.user) return;
   try {
-    const response = await apiClient.get(`orders/${authStore.user.id}`);
+    const response = await apiClient.get('orders'); 
     if (response.data.success) {
       orders.value = response.data.orders;
     }

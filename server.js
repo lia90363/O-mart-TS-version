@@ -141,14 +141,14 @@ app.get('/api/products', async (req, res) => {
 });
 
 // [GET] 取得特定使用者的購物車
-app.get('/api/cart/:userId', async (req, res) => {
-  const { userId } = req.params;
+app.get('/api/cart', authenticateToken, async (req, res) => {
+  const userId = req.user.userId; 
   try {
     const [rows] = await pool.query(`
       SELECT 
         c.product_id as id, c.qty, c.variant_index as selectedVariantIndex,
         p.title, p.price, p.category,
-        v.name as selectedVariantName, v.image as image,
+        v.name as selectedVariantName, v.image as variant_img
       FROM cart_items c
       JOIN products p ON c.product_id = p.id
       LEFT JOIN product_variants v ON c.variant_index = v.id
@@ -163,9 +163,10 @@ app.get('/api/cart/:userId', async (req, res) => {
 });
 
 // [POST] 合併購物車
-app.post('/api/cart/merge', async (req, res) => {
-    const { userId, localItems } = req.body;
-    if (!userId || !localItems) return res.status(400).json({ error: "參數缺失" });
+app.post('/api/cart/merge', authenticateToken, async (req, res) => {
+    const userId = req.user.userId; 
+    const { localItems } = req.body;
+    if (!localItems) return res.status(400).json({ error: "參數缺失" });
 
     try {
         for (const item of localItems) {
@@ -270,7 +271,7 @@ app.post('/api/checkout', authenticateToken, async (req, res) => {
   try {
     // 重新從資料庫撈取商品確保價格正確
     const [dbCartItems] = await connection.query(`
-      SELECT c.product_id, c.qty, p.price, v.name as variant_name, v.image as image
+      SELECT c.product_id, c.qty, p.price, v.name as variant_name, v.image as variant_img
       FROM cart_items c
       JOIN products p ON c.product_id = p.id
       LEFT JOIN product_variants v ON c.variant_index = v.id 
@@ -322,7 +323,7 @@ app.post('/api/checkout', authenticateToken, async (req, res) => {
     for (const item of dbCartItems) {
       await connection.query(
         "INSERT INTO order_items (order_id, product_id, variant_name, price_at_time, qty, image) VALUES (?, ?, ?, ?, ?, ?)",
-        [orderId, item.product_id, item.variant_name || '標準款', item.price, item.qty, item.image]
+        [orderId, item.product_id, item.variant_name || '標準款', item.price, item.qty, item.variant_img]
       );
     }
 
@@ -340,36 +341,9 @@ app.post('/api/checkout', authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/api/cart/:userId', async (req, res) => {
-  const { userId } = req.params;
-  try {
-    const [rows] = await pool.query(`
-      SELECT 
-        c.product_id as id, c.qty, c.variant_index as selectedVariantIndex,
-        p.title, p.price, p.category,
-        v.name as selectedVariantName, v.image
-      FROM cart_items c
-      JOIN products p ON c.product_id = p.id
-      LEFT JOIN product_variants v ON (c.product_id = v.product_id AND c.variant_index = v.id)
-      WHERE c.user_id = ?
-    `, [userId]);
-
-    // 確保回傳 success: true 且 items 欄位名稱與前端一致
-    res.json({ success: true, items: rows });
-  } catch (error) {
-    console.error('Fetch Cart Error:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
 // [GET] 取得歷史訂單
-app.get('/api/orders/:userId', authenticateToken, async (req, res) => {
-  const { userId } = req.params;
-
-  // 安全檢查：防止 A 使用者輸入 B 的 ID 來看別人的訂單
-  if (parseInt(userId) !== req.user.userId) {
-    return res.status(403).json({ success: false, message: '權限不足' });
-  }
+app.get('/api/orders', authenticateToken, async (req, res) => {
+  const userId = req.user.userId; 
 
   try {
     const [rows] = await pool.query(`
@@ -412,12 +386,9 @@ app.get('/api/orders/:userId', authenticateToken, async (req, res) => {
       });
       return acc;
     }, {});
-
     res.json({ success: true, orders: Object.values(orders) });
-
   } catch (error) {
-    console.error('Fetch Orders Error:', error);
-    res.status(500).json({ success: false, message: '伺服器錯誤' });
+    res.status(500).json({ success: false });
   }
 });
 

@@ -121,18 +121,17 @@ export const useCartStore = defineStore('cart', () => {
 
 
   // 將本地購物車合併到後端 (通常在登入成功後執行)
-  const syncCartToServer = async (userId: number) => {
+  const syncCartToServer = async () => {
     if (cart.value.length === 0) return; // 如果本地沒東西就不跑 API
 
     try {
       const response = await apiClient.post(`cart/merge`, {
-        userId,
         localItems: cart.value // 傳送目前的 cart 陣列
       });
       
       if (response.data) {
         // 同步完後，立刻從伺服器抓取最新的完整清單（包含原本就在雲端的商品）
-        await fetchCartFromServer(userId);
+        await fetchCartFromServer();
       }
     } catch (error) {
       console.error('同步購物車至伺服器失敗:', error);
@@ -140,9 +139,9 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   // 從後端抓取該用戶的最新購物車清單
-  const fetchCartFromServer = async (userId: number) => {
+  const fetchCartFromServer = async () => {
     try {
-      const response = await apiClient.get(`cart/${userId}`);
+      const response = await apiClient.get('cart');
       
       if (response.data && response.data.success && Array.isArray(response.data.items)) {
         cart.value = response.data.items;
@@ -152,7 +151,6 @@ export const useCartStore = defineStore('cart', () => {
       }
     } catch (error) {
       console.error('抓取購物車失敗:', error);
-      // 這裡可以選擇不動作，保留本地現有的內容，或是提示使用者
     }
   };
 
