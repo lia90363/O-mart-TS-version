@@ -23,6 +23,7 @@ export interface CartItem extends Product {
   qty: number;
   selectedVariantIndex: number;
   selectedVariantName?: string;
+  cart_item_id?: number;
 }
 
 export const useCartStore = defineStore('cart', () => {
@@ -82,28 +83,55 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   // 刪除品項
-  const removeFromCart = (productId: number, variantIndex: number) => {
-    // 強制檢查：如果不是陣列就先校正為空陣列，防止 filter 崩潰
-    if (!Array.isArray(cart.value)) {
-      cart.value = [];
-      return;
+  const removeFromCart = async (payload: {
+    cartItemId?: number;
+    productId?: number;
+    variantIndex?: number;
+  }) => {
+    const authStore = useAuthStore();
+
+    try {
+      if (authStore.user && payload.cartItemId) {
+        // ✅ 登入 → 用資料庫 ID 刪
+        await apiClient.delete(`cart/${payload.cartItemId}`);
+        await fetchCartFromServer();
+      } else if (payload.productId !== undefined && payload.variantIndex !== undefined) {
+        // ✅ 未登入 → 用 local 條件刪
+        cart.value = cart.value.filter(item =>
+          !(item.id === payload.productId &&
+            item.selectedVariantIndex === payload.variantIndex)
+        );
+      } else {
+        console.warn('removeFromCart 缺少必要參數');
+      }
+    } catch (error) {
+      console.error('刪除購物車失敗:', error);
     }
-    
-    cart.value = cart.value.filter(item => 
-      !(item.id === productId && item.selectedVariantIndex === variantIndex)
-    );
   };
 
   // 更新數量(透過+-)
-  const updateQty = (productId: number, variantIndex: number, num: number) => {
-    const item = cart.value.find(i => 
-      i.id === productId && i.selectedVariantIndex === variantIndex
-    )
-    if (!item) return
-    
-    item.qty += num
-    if (item.qty <= 0) removeFromCart(productId, variantIndex)
-  }
+  const updateQty = (
+    productId: number,
+    variantIndex: number,
+    num: number
+  ) => {
+    const item = cart.value.find(i =>
+      i.id === productId &&
+      i.selectedVariantIndex === variantIndex
+    );
+
+    if (!item) return;
+
+    item.qty += num;
+
+    if (item.qty <= 0) {
+      removeFromCart({
+        cartItemId: item.cart_item_id,
+        productId: item.id,
+        variantIndex: item.selectedVariantIndex
+      });
+    }
+  };
 
   // 更新數量(透過輸入欄)
   const updateQtyByInput = (productId: number, value: string | number, variantIndex: number) => {

@@ -67,7 +67,7 @@
             top: 2px;
             right: 2px;
             color: $gray-dark;
-            background-color: $gray-soft;
+            background-color: transparent;
             border: none;
             cursor: pointer;
             font-size: 24px;
@@ -103,6 +103,7 @@
                 height: 32px;
                 background-color: $gray-soft;
                 border: none;
+                border-radius: 20px;
                 cursor: pointer;
                 font-size: 20px;
                 align-items: center;
@@ -247,7 +248,6 @@
             }
 
             .item-qty {
-                border-radius: 6px;
                 border: none; 
                 height: 30px;
                 margin-top: 0;

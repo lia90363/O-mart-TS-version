@@ -2,19 +2,25 @@
 import { useCartStore } from '@/stores/cartStore'
 import { useToastStore } from '@/stores/useToastStore';
 import { useRouter } from 'vue-router'
+import apiClient from '@/api/axios';
 
 const router = useRouter()
 const cartStore = useCartStore()
 const toast = useToastStore();
 
-const checkOut = () => {
-    if (cartStore.cart.length === 0) return;
-    toast.showToast('訂單已送出，感謝您的購買！');
-    cartStore.clearCart();  // 結帳完通常會清空購物車
-    setTimeout(() => {
-        router.push('/');
-    }, 1000);
-};
+const checkOut = async () => {
+  try {
+    await apiClient.post('/orders', {
+      items: cartStore.cart
+    })
+
+    toast.showToast('訂單已送出')
+    cartStore.clearCart()
+    router.push('/')
+  } catch (e) {
+    toast.showToast('結帳失敗')
+  }
+}
 
 // 解決 HTML Input 事件型別問題，確保輸入的值能正確傳回 Store 更新 MySQL 或 LocalState
 const handleQtyChange = (e: Event, id: number, variantIndex: number) => {
@@ -34,12 +40,19 @@ const handleQtyChange = (e: Event, id: number, variantIndex: number) => {
         <li v-for="item in cartStore.cart" :key="`${item.id}-${item.selectedVariantIndex}`" class="cart-card">
             <div class="cart-img">
                 <router-link :to="`/product/${item.id}`">
-                    <img :src="item.variants?.[0]?.image" :alt="item.title" loading="lazy">
+                    <img :src="item.variants?.[item.selectedVariantIndex]?.image" :alt="item.title" loading="lazy">
                 </router-link>
             </div>
             <div class="item-info">
                 <!-- 刪除按鈕：點擊後會連動 Store 進行過濾 -->
-                <button @click="cartStore.removeFromCart(item.id, item.selectedVariantIndex)" class="item-delete">×</button>
+                <button 
+                    @click="cartStore.removeFromCart({
+                        cartItemId: item.cart_item_id,
+                        productId: item.id,
+                        variantIndex: item.selectedVariantIndex
+                    })"
+                    class="item-delete"
+                >×</button>
                 <div class="item-title">
                     <router-link :to="`/product/${item.id}`">{{ item.title }}</router-link>
                 </div>
@@ -58,8 +71,11 @@ const handleQtyChange = (e: Event, id: number, variantIndex: number) => {
                     <input 
                         type="number" 
                         class="qty-input"
-                        :value="item.qty" 
-                        @change="(e) => handleQtyChange(e, item.id, item.selectedVariantIndex)"
+                        :value="item.qty"
+                        @change="(e) => {
+                            const target = e.target as HTMLInputElement;
+                            cartStore.updateQtyByInput(item.id, target.value, item.selectedVariantIndex);
+                        }"
                         min="1"
                     />
                     <button @click="cartStore.updateQty(item.id, item.selectedVariantIndex, 1)" class="qty-btn">+</button>
@@ -79,7 +95,7 @@ const handleQtyChange = (e: Event, id: number, variantIndex: number) => {
         <button 
             class="checkout-btn" 
             :disabled="cartStore.totalItems === 0"
-            @click="router.push('/checkout')"
+            @click="checkOut"
         >
             前往結帳
         </button>

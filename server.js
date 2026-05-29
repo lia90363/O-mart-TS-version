@@ -146,6 +146,7 @@ app.get('/api/cart', authenticateToken, async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT 
+        c.id as cart_item_id,
         c.product_id as id, c.qty, c.variant_index as selectedVariantIndex,
         p.title, p.price, p.category,
         v.name as selectedVariantName, v.image as variant_img
@@ -436,6 +437,41 @@ app.post('/api/forgot-password', async (req, res) => {
     res.json({ success: true, message: '重設密碼信件已寄出' });
   } catch (error) {
     res.status(500).json({ success: false, message: '伺服器錯誤' });
+  }
+});
+
+// [DELETE] 刪除購物車單一商品
+app.delete('/api/cart/:id', authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+  const cartItemId = req.params.id;
+
+  try {
+    await pool.query(
+      "DELETE FROM cart_items WHERE id = ? AND user_id = ?",
+      [cartItemId, userId]
+    );
+
+    res.json({ success: true, message: "商品已從購物車移除" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "刪除失敗" });
+  }
+});
+
+// [PUT] 修改購物車數量
+app.put('/api/cart/:id', authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+  const cartItemId = req.params.id;
+  const { qty } = req.body;
+
+  try {
+    await pool.query(
+      "UPDATE cart_items SET qty = ? WHERE id = ? AND user_id = ?",
+      [qty, cartItemId, userId]
+    );
+
+    res.json({ success: true, message: "數量更新成功" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "更新失敗" });
   }
 });
 
